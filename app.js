@@ -115,8 +115,21 @@ function signMat(i,col){const k=i+'_'+col;if(signMats[k])return signMats[k];cons
 
 // ---------- data ----------
 let DATA={buildings:[]};
+// Pluggable store: swap LocalStore for a SupabaseStore with the same async API later (anon key only, RLS on).
+const LocalStore={
+ async list(){return JSON.parse(localStorage.nh3_claims||'[]');},
+ async save(all){localStorage.nh3_claims=JSON.stringify(all);},
+ async add(c){const a=await this.list();a.push(c);await this.save(a);return c;},
+ async setStatus(code,status){const a=await this.list();const c=a.find(x=>x.code===code);if(c){c.status=status;c.updated=Date.now();await this.save(a);}return c;}};
+const Store=LocalStore;
+function newCode(used){let c;do{c='NH-'+(1000+Math.floor(Math.random()*9000));}while(used.has(c));return c;}
 async function loadData(){try{DATA=await (await fetch('buildings.json')).json();}catch(e){}
- const mine=JSON.parse(localStorage.nh3_claims||'[]');for(const c of mine){const b=DATA.buildings.find(b=>b.slot==c.slot);if(b&&!b.nick)Object.assign(b,c);}}
+ for(const b of DATA.buildings)if(b.nick&&!b.status)b.status='verified';
+ const mine=await Store.list();for(const c of mine){const b=DATA.buildings.find(b=>b.slot==c.slot);if(!b)continue;
+  if(c.status==='freed'){if(!b.nick||b.code===c.code){Object.assign(b,{nick:null,flag:null,status:'freed',freedNick:c.nick,code:c.code});}}
+  else if(!b.nick||b.code===c.code)Object.assign(b,c);}}
+function applyClaim(c){const b=DATA.buildings.find(b=>b.slot==c.slot);if(!b)return;
+ if(c.status==='freed')Object.assign(b,{nick:null,flag:null,status:'freed',freedNick:c.nick,code:c.code});else Object.assign(b,c);}
 
 // ---------- city build ----------
 let city=null,slots=[],blockRects=[];
@@ -146,7 +159,15 @@ const ASPH=asphaltTex(),PUD=puddleTex();
 let reflector=null,groundMat=null;
 
 function plateTex(b){const c=document.createElement('canvas');c.width=640;c.height=128;const g=c.getContext('2d');
- const own=!!b.nick;g.fillStyle=own?'rgba(8,10,24,.85)':'rgba(8,10,24,.55)';g.beginPath();g.roundRect(4,4,632,120,24);g.fill();
+ if(b.status==='pending'||b.status==='freed'){const pend=b.status==='pending',col=pend?'#ffb020':'#ff2bd6';
+  g.fillStyle=pend?'rgba(30,20,0,.88)':'rgba(24,6,22,.85)';g.beginPath();g.roundRect(4,4,632,120,24);g.fill();
+  if(pend){g.save();g.beginPath();g.roundRect(4,4,632,120,24);g.clip();g.fillStyle='rgba(255,176,32,.25)';for(let x=-120;x<700;x+=60){g.beginPath();g.moveTo(x,0);g.lineTo(x+30,0);g.lineTo(x-90,128);g.lineTo(x-120,128);g.fill();}g.restore();}
+  g.strokeStyle=col;g.lineWidth=5;g.shadowColor=col;g.shadowBlur=14;g.stroke();g.shadowBlur=0;g.textBaseline='middle';
+  g.font='60px "Noto Color Emoji",sans-serif';g.fillText(pend?'🚧':'💔',20,68);g.fillStyle='#fff';g.font='bold 40px system-ui,sans-serif';
+  g.fillText(pend?'Remodeling your house':'Free · follow again',100,pend?50:66);
+  if(pend){g.font='26px system-ui,sans-serif';g.fillStyle='#ffd27a';g.fillText('verifying follow…'+(b.code?' '+b.code:''),100,96);}
+  const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;tx.anisotropy=4;return tx;}
+ const own=!!b.nick&&b.status!=='pending';g.fillStyle=own?'rgba(8,10,24,.85)':'rgba(8,10,24,.55)';g.beginPath();g.roundRect(4,4,632,120,24);g.fill();
  g.strokeStyle=own?'#00e5ff':'#555c77';g.lineWidth=5;g.shadowColor='#00e5ff';g.shadowBlur=own?16:0;g.stroke();g.shadowBlur=0;
  g.textBaseline='middle';g.font='64px "Noto Color Emoji",sans-serif';g.fillText(own?(b.flag||'🏳️'):'🏢',22,68);
  g.font='bold 46px system-ui,sans-serif';g.fillStyle=own?'#fff':'#9aa3c0';let t=own?'@'+b.nick:'#'+b.slot+' · free';
@@ -237,14 +258,51 @@ function buildCity(d){
  for(const s of slots){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:plateTex(s.b),depthTest:true,transparent:true}));sp.scale.set(25,5,1);sp.position.set(s.x,s.h+5,s.z);sp.renderOrder=5;city.add(sp);s.plate=sp;
   // ground-level plate on facade
   const fp=new THREE.Mesh(new THREE.PlaneGeometry(10,2),new THREE.MeshBasicMaterial({map:sp.material.map,transparent:true,toneMapped:false}));fp.position.set(s.x,4.5,s.z+s.d/2+.3);city.add(fp);s.fplate=fp;}
+ remodels=[];if(d===0)for(const s of slots)if(s.b.status==='pending')remodels.push(makeRemodel(s));
  buildCars(d,r);
- const owned=DATA.buildings.filter(b=>b.nick).length;
+ const owned=DATA.buildings.filter(b=>b.nick&&b.status==='verified').length;
  $('#count').textContent=d===0?`🏙 ${owned} ${owned===1?'home':'homes'} · ${DATA.buildings.length-owned} free`:`🏙 0 homes`;
  $('#dname').textContent=`${d+1}/${DISTRICTS.length} · ${dist.name}`;
  const locked=FOLLOWERS<dist.unlock;const lk=$('#lock');lk.style.display=locked?'block':'none';
  lk.innerHTML=`🔒 <b>${dist.name}</b><br>Unlocks at ${dist.unlock} followers<br><small>${FOLLOWERS} / ${dist.unlock}</small>`;
  setNight(night);
 }
+// ---------- remodeling fx: scaffolding, tower crane, welding sparks ----------
+let remodels=[];
+function makeRemodel(s){const g=new THREE.Group();city.add(g);const W=s.w+3,D=s.d+3,H=s.h+4;
+ const pts=[];const lvl=Math.max(4,Math.round(H/6)),col=Math.max(3,Math.round(W/5));
+ for(const[sx,sz,len,ax]of[[-W/2,-D/2,W,'x'],[-W/2,D/2,W,'x'],[-W/2,-D/2,D,'z'],[W/2,-D/2,D,'z']]){
+  for(let i=0;i<=lvl;i++){const y=i*H/lvl;const a=[sx,y,sz],b=ax==='x'?[sx+len,y,sz]:[sx,y,sz+len];pts.push(...a,...b);}
+  for(let k=0;k<=col;k++){const t=k*len/col;const x=ax==='x'?sx+t:sx,z=ax==='x'?sz:sz+t;pts.push(x,0,z,x,H,z);
+   if(k<col)for(let i=0;i<lvl;i++){const t2=(k+1)*len/col,x2=ax==='x'?sx+t2:sx,z2=ax==='x'?sz:sz+t2;pts.push(x,i*H/lvl,z,x2,(i+1)*H/lvl,z2);}}}
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+ const sc=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:new THREE.Color(1.4,.9,.3),transparent:true,opacity:.85}));sc.position.set(s.x,0,s.z);g.add(sc);
+ // safety mesh panels
+ const net=new THREE.Mesh(new THREE.BoxGeometry(W,H*.55,D),new THREE.MeshStandardMaterial({color:0x1d3b2a,transparent:true,opacity:.35,roughness:1,side:THREE.DoubleSide,depthWrite:false}));net.position.set(s.x,H*.3,s.z);g.add(net);
+ // tower crane
+ const steel=new THREE.MeshStandardMaterial({color:0xd8a020,metalness:.5,roughness:.5,emissive:0x3a2600});
+ const mastH=H+28,mast=new THREE.Mesh(new THREE.BoxGeometry(1.4,mastH,1.4),steel);mast.position.set(s.x+W/2+3,mastH/2,s.z-D/2-3);g.add(mast);
+ const jib=new THREE.Group();jib.position.set(mast.position.x,mastH,mast.position.z);g.add(jib);
+ const arm=new THREE.Mesh(new THREE.BoxGeometry(46,1.1,1.1),steel);arm.position.x=-14;jib.add(arm);
+ const cw=new THREE.Mesh(new THREE.BoxGeometry(4,2.5,2.5),new THREE.MeshStandardMaterial({color:0x444,roughness:.8}));cw.position.x=8;jib.add(cw);
+ const cab=new THREE.Mesh(new THREE.BoxGeometry(2.4,2,2.4),steel);cab.position.y=-1.6;jib.add(cab);
+ const cable=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,14,4),new THREE.MeshBasicMaterial({color:0x222}));cable.position.set(-26,-7,0);jib.add(cable);
+ const load=new THREE.Mesh(new THREE.BoxGeometry(3,1.2,1.5),new THREE.MeshStandardMaterial({color:0x8899aa,metalness:.7,roughness:.3}));load.position.set(-26,-14.5,0);jib.add(load);
+ const beacon=new THREE.Mesh(new THREE.SphereGeometry(.6,8,6),new THREE.MeshBasicMaterial({color:new THREE.Color(4,.3,.2),toneMapped:false}));beacon.position.y=1.2;jib.add(beacon);
+ // sparks
+ const NS=60,sp=new Float32Array(NS*3),vel=[];for(let i=0;i<NS;i++)vel.push(new THREE.Vector3());
+ const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+ const spk=new THREE.Points(sg,new THREE.PointsMaterial({color:new THREE.Color(4,2.6,.8),size:.9,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,map:radial(),toneMapped:false}));g.add(spk);
+ const flash=new THREE.PointLight(0xffb050,0,40,2);g.add(flash);
+ const st={g,jib,beacon,spk,vel,flash,s,W,D,H,life:new Float32Array(NS),src:new THREE.Vector3(),t:Math.random()*10};
+ return st;}
+function updateRemodels(dt){for(const m of remodels){m.t+=dt;m.jib.rotation.y=Math.sin(m.t*.25)*1.1;m.beacon.visible=(m.t%1)<.5;
+ if(Math.floor(m.t*0.7)!==m.k){m.k=Math.floor(m.t*0.7);const side=(m.k%4);const y=2+((m.k*7)%Math.max(3,m.H-4));
+  m.src.set(m.s.x+(side<2?(side?1:-1)*m.W/2:0),y,m.s.z+(side>=2?(side==3?1:-1)*m.D/2:0));}
+ const pos=m.spk.geometry.attributes.position;const burst=(m.t%0.7)<0.45;m.flash.position.copy(m.src);m.flash.intensity=burst?(80+Math.random()*120):0;
+ for(let i=0;i<m.life.length;i++){if(m.life[i]<=0){if(burst&&Math.random()<.5){m.life[i]=.4+Math.random()*.6;pos.setXYZ(i,m.src.x,m.src.y,m.src.z);m.vel[i].set((Math.random()-.5)*10,Math.random()*6,(Math.random()-.5)*10);}else{pos.setXYZ(i,0,-999,0);continue;}}
+  m.life[i]-=dt;m.vel[i].y-=18*dt;pos.setXYZ(i,pos.getX(i)+m.vel[i].x*dt,Math.max(.1,pos.getY(i)+m.vel[i].y*dt),pos.getZ(i)+m.vel[i].z*dt);}
+ pos.needsUpdate=true;}}
 function radial(){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'#fff');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);}
 
 // ---------- flying cars ----------
@@ -292,8 +350,10 @@ function focusSlot(s,open=true){if(walk)toggleWalk();
  const beam=new THREE.Mesh(new THREE.CylinderGeometry(s.w*.12,s.w*.3,600,24,1,true),new THREE.MeshBasicMaterial({color:new THREE.Color(0,1.5,2),transparent:true,opacity:.05,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
  beam.position.set(s.x,s.h+300,s.z);const edges=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(s.w+1,s.h+1,s.d+1)),new THREE.LineBasicMaterial({color:new THREE.Color(0,3,4),toneMapped:false}));
  edges.position.set(s.x,s.h/2+.3,s.z);highlight.add(beam,edges);city.add(highlight);if(open)showCard(s);}
-function showCard(s){const b=s.b;$('#cf').textContent=b.nick?(b.flag||'🏳️'):'🏢';$('#cn').textContent=b.nick?'@'+b.nick:`Building #${b.slot}`;
- $('#ci').innerHTML=b.nick?`Home #${b.slot} · ${DISTRICTS[0].name}${b.coins?` · 🪙 ${b.coins}`:''}`:'Free — follow us on Instagram to claim it!';
+function showCard(s){const b=s.b;$('#cf').textContent=b.status==='pending'?'🚧':b.nick?(b.flag||'🏳️'):(b.status==='freed'?'💔':'🏢');$('#cn').textContent=b.nick?'@'+b.nick:`Building #${b.slot}`;
+ $('#ci').innerHTML=b.status==='pending'?`<b style="color:#ffb020">Remodeling your house…</b><br>Comment <b>${b.code}</b> under any of our ${b.source==='tiktok'?'TikTok videos':'Instagram reels'} and keep following. Your nick appears here once our bot verifies (every few minutes).`
+  :b.status==='freed'?`Free again — <b>@${b.freedNick||'?'}</b> unfollowed us.<br><span style="color:#ff9be9">Follow again and re-register to get a home back!</span>`
+  :b.nick?`Home #${b.slot} · ${DISTRICTS[0].name}${b.coins?` · 🪙 ${b.coins}`:''}`:'Free — follow us on Instagram or TikTok to claim it!';
  $('#card').style.display='block';$('#card').dataset.nick=b.nick||'';if(b.nick)history.replaceState(null,'','#'+encodeURIComponent(b.nick));}
 $('#cclose').onclick=()=>{$('#card').style.display='none';};
 $('#cshare').onclick=async()=>{const n=$('#card').dataset.nick;const url=location.origin+location.pathname+(n?'#'+encodeURIComponent(n):'');
@@ -353,10 +413,20 @@ const COUNTRIES=CC.map(c=>({c,n:DN.of(c),f:FL(c)})).sort((a,b)=>a.n.localeCompar
 function listC(){const q=$('#rs').value.toLowerCase();$('#cl').innerHTML=COUNTRIES.filter(x=>x.n.toLowerCase().includes(q)).map(x=>`<div data-c="${x.c}" class="${pick&&pick.c==x.c?'sel':''}">${x.f} ${x.n}</div>`).join('');}
 $('#rs').oninput=listC;$('#cl').onclick=e=>{const c=e.target.dataset.c;if(!c)return;pick=COUNTRIES.find(x=>x.c==c);$('#rs').value=pick.f+' '+pick.n;listC();};
 $('#bReg').onclick=()=>{$('#reg').style.display='block';listC();};$('#rx').onclick=()=>$('#reg').style.display='none';
-$('#rok').onclick=()=>{const n=$('#rn').value.trim().replace(/^@/,'');if(!/^[\w.]{1,30}$/.test(n))return alert('Enter a valid Instagram nickname');if(!pick)return alert('Pick your country');
+let src='instagram';document.querySelectorAll('#src button').forEach(x=>x.onclick=()=>{src=x.dataset.s;document.querySelectorAll('#src button').forEach(y=>y.classList.toggle('on',y===x));});
+$('#rok').onclick=async()=>{const n=$('#rn').value.trim().replace(/^@/,'');if(!/^[\w.]{1,30}$/.test(n))return alert('Enter a valid nickname');if(!pick)return alert('Pick your country');
+ if(DATA.buildings.some(b=>b.nick&&b.nick.toLowerCase()===n.toLowerCase()))return alert('This nick already has a home — search it!');
  const b=DATA.buildings.find(b=>!b.nick);if(!b)return alert('District full — next one unlocks soon!');
- const mine=JSON.parse(localStorage.nh3_claims||'[]');mine.push({nick:n,flag:pick.f,country:pick.c,slot:b.slot});localStorage.nh3_claims=JSON.stringify(mine);
- Object.assign(b,{nick:n,flag:pick.f,country:pick.c});$('#reg').style.display='none';D=0;buildCity(0);const s=slots.find(s=>s.b===b);focusSlot(s);toast('Pending: we verify your Instagram follow');};
+ const all=await Store.list();const code=newCode(new Set(all.map(x=>x.code)));
+ const c={nick:n,flag:pick.f,country:pick.c,source:src,slot:b.slot,code,status:'pending',created:Date.now()};await Store.add(c);applyClaim(c);
+ $('#reg').style.display='none';D=0;buildCity(0);const s=slots.find(s=>s.b===b);focusSlot(s,false);
+ $('#dcode').textContent=code;$('#dsrc').textContent=src==='tiktok'?'TikTok video':'Instagram reel';$('#done').style.display='block';};
+$('#dok').onclick=()=>{$('#done').style.display='none';const s=slots.find(s=>s.b.code===$('#dcode').textContent);if(s)showCard(s);};
+$('#dcopy').onclick=async()=>{try{await navigator.clipboard.writeText($('#dcode').textContent);toast('Code copied');}catch(e){toast($('#dcode').textContent);}};
+// bot hooks: the verification bot (or Supabase realtime later) calls these
+async function setStatus(code,status){const c=await Store.setStatus(code,status);if(!c)return false;
+ if(status==='verified'){const b=DATA.buildings.find(b=>b.slot==c.slot);Object.assign(b,c);}else applyClaim(c);
+ const keep=$('#card').style.display==='block';buildCity(D);const s=slots.find(s=>s.b.slot==c.slot);if(s&&keep)focusSlot(s);return true;}
 
 // ---------- loop ----------
 const clock=new THREE.Clock();let fpsAcc=0,fpsN=0;
@@ -364,14 +434,14 @@ function loop(){requestAnimationFrame(loop);const dt=Math.min(.05,clock.getDelta
  if(fly){fly.t+=dt/fly.dur;const k=fly.t>=1?1:1-Math.pow(1-fly.t,3);const arc=Math.sin(Math.PI*Math.min(1,fly.t))*Math.min(120,fly.p0.distanceTo(fly.p1)*.25);
   camera.position.lerpVectors(fly.p0,fly.p1,k);camera.position.y+=arc;controls.target.lerpVectors(fly.t0,fly.t1,k);camera.lookAt(controls.target);if(fly.t>=1)fly=null;}
  if(walk)updateWalk(dt);else if(!fly)controls.update();
- updateCars(dt);
+ updateCars(dt);updateRemodels(dt);
  // nameplate LOD
- for(const s of slots){const dd=camera.position.distanceTo(s.plate.position);s.plate.visible=dd<(s.b.nick?420:200);const sc=Math.max(1,dd/90);s.plate.scale.set(25*sc,5*sc,1);s.fplate.visible=dd<120;}
+ for(const s of slots){const dd=camera.position.distanceTo(s.plate.position);s.plate.visible=dd<(s.b.nick||s.b.status?420:200);const sc=Math.max(1,dd/90);s.plate.scale.set(25*sc,5*sc,1);s.fplate.visible=dd<120;}
  sky.position.copy(camera.position);
  composer.render();}
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);bloom.resolution.set(innerWidth/2,innerHeight/2);});
 
 await loadData();buildCity(0);hint();loop();
-window.NH={flyNick:q=>{const s=findNick(q);if(s)focusSlot(s);return !!s;},setNight,toggleWalk,get walk(){return walk},camera,controls,go:(d)=>{D=d;switchD();},yawTo:v=>yaw=v};
+window.NH={flyNick:q=>{const s=findNick(q);if(s)focusSlot(s);return !!s;},setNight,toggleWalk,get walk(){return walk},camera,controls,go:(d)=>{D=d;switchD();},yawTo:v=>yaw=v,verify:c=>setStatus(c,'verified'),unfollow:c=>setStatus(c,'freed'),focus:slot=>{const s=slots.find(s=>s.b.slot==slot);if(s)focusSlot(s);},Store};
 const h=decodeURIComponent(location.hash.slice(1));if(h){const s=findNick(h);if(s)setTimeout(()=>focusSlot(s),600);}
 document.title='Neon Horizon 3D';window.__ready=true;

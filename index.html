@@ -15,6 +15,8 @@ button:hover{border-color:#00e5ff}button.on{background:#00e5ff33;border-color:#0
 #lock{position:fixed;top:42%;left:50%;transform:translate(-50%,-50%);text-align:center;padding:18px 26px;border-radius:16px;background:#05060cc8;border:1px solid #ff2bd6;display:none;z-index:4}
 #card,#reg{position:fixed;right:12px;top:64px;width:280px;padding:16px;border-radius:16px;background:#0a1020ee;border:1px solid #00e5ff88;display:none;z-index:6;box-shadow:0 0 30px #00e5ff33}
 #card .f{font-size:42px}#card h3{margin:4px 0}
+#done{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(320px,92vw);padding:18px;border-radius:16px;background:#140f02f2;border:1px solid #ffb020;box-shadow:0 0 30px #ffb02055;text-align:center;display:none;z-index:8}
+#dcode{font:800 34px ui-monospace,monospace;letter-spacing:.08em;color:#ffb020;margin:6px 0}
 #reg{left:50%;right:auto;transform:translateX(-50%);width:min(340px,94vw)}
 #reg input{width:100%;margin:4px 0 8px;padding:8px;border-radius:8px;border:1px solid #33508f;background:#050a18;color:#fff}
 #cl{max-height:150px;overflow:auto;font-size:14px}#cl div{padding:4px;cursor:pointer}#cl div:hover,#cl div.sel{background:#00e5ff33}
@@ -32,9 +34,13 @@ button:hover{border-color:#00e5ff}button.on{background:#00e5ff33;border-color:#0
 <div id="hint"></div>
 <div id="lock"></div><div id="toast" class="pill"></div>
 <div id="card"><div class="f" id="cf"></div><h3 id="cn"></h3><div id="ci" style="font-size:13px;opacity:.8"></div><p style="display:flex;gap:6px"><button id="cshare">🔗 Share</button><button id="cclose">✕</button></p></div>
-<div id="reg"><b>Claim your building</b><div class="note">⚠️ You must follow us on Instagram to get a building. Unfollow = your building is freed (checked daily).</div>
-<label>Instagram nick</label><input id="rn" placeholder="@yournick"><label>Country</label><input id="rs" placeholder="Search country…"><div id="cl"></div>
+<div id="reg"><b>Claim your building</b><div class="note">⚠️ Follow us on Instagram or TikTok to get a building. Unfollow = your building is freed (checked every 2 hours).</div>
+<label>I'm coming from</label><div id="src" style="display:flex;gap:6px;margin:4px 0 8px"><button type="button" data-s="instagram" class="on">📸 Instagram</button><button type="button" data-s="tiktok">🎵 TikTok</button></div>
+<label>Your nick</label><input id="rn" placeholder="@yournick"><label>Country</label><input id="rs" placeholder="Search country…"><div id="cl"></div>
 <p style="display:flex;gap:6px"><button id="rok">Claim</button><button id="rx">Cancel</button></p></div>
+<div id="done"><div style="font-size:34px">🚧</div><b>Remodeling your house…</b><p style="font-size:14px">Comment this code under any of our <span id="dsrc"></span>:</p>
+<div id="dcode"></div><p style="display:flex;gap:6px;justify-content:center"><button id="dcopy">📋 Copy</button><button id="dok">OK</button></p>
+<div class="note">Keep following — our bot verifies in a few minutes, then your nick + flag light up on the house.</div></div>
 <div id="joy"><div id="knob"></div></div>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 <script type="module" src="app.js"></script></body></html>
