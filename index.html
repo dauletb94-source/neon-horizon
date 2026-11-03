@@ -1,0 +1,40 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel="icon" href="data:,"><title>Neon Horizon 3D — follower city</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#05060c;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#e8f4ff}
+canvas{display:block;touch-action:none}
+#hdr{position:fixed;top:0;left:0;right:0;display:flex;gap:8px;align-items:center;padding:10px 12px;background:linear-gradient(#05060ccc,#05060c00);z-index:5;flex-wrap:wrap}
+#logo{font-weight:800;letter-spacing:.08em;font-size:17px;background:linear-gradient(90deg,#00e5ff,#ff2bd6);-webkit-background-clip:text;color:transparent}
+.pill{background:#0d1426cc;border:1px solid #2a3b66;border-radius:999px;padding:6px 11px;font-size:13px;backdrop-filter:blur(6px)}
+button{font:inherit;color:#e8f4ff;background:#101a33dd;border:1px solid #33508f;border-radius:10px;padding:7px 11px;cursor:pointer}
+button:hover{border-color:#00e5ff}button.on{background:#00e5ff33;border-color:#00e5ff}
+#search{display:flex;gap:4px}#search input{width:150px;background:#0b1224dd;border:1px solid #33508f;border-radius:10px;color:#fff;padding:7px 9px}
+#dist{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;z-index:5}
+#dname{min-width:200px;text-align:center}
+#lock{position:fixed;top:42%;left:50%;transform:translate(-50%,-50%);text-align:center;padding:18px 26px;border-radius:16px;background:#05060cc8;border:1px solid #ff2bd6;display:none;z-index:4}
+#card,#reg{position:fixed;right:12px;top:64px;width:280px;padding:16px;border-radius:16px;background:#0a1020ee;border:1px solid #00e5ff88;display:none;z-index:6;box-shadow:0 0 30px #00e5ff33}
+#card .f{font-size:42px}#card h3{margin:4px 0}
+#reg{left:50%;right:auto;transform:translateX(-50%);width:min(340px,94vw)}
+#reg input{width:100%;margin:4px 0 8px;padding:8px;border-radius:8px;border:1px solid #33508f;background:#050a18;color:#fff}
+#cl{max-height:150px;overflow:auto;font-size:14px}#cl div{padding:4px;cursor:pointer}#cl div:hover,#cl div.sel{background:#00e5ff33}
+.note{font-size:12px;color:#ff9be9;margin:6px 0}
+#joy{position:fixed;left:24px;bottom:80px;width:120px;height:120px;border-radius:50%;border:2px solid #00e5ff88;background:#00e5ff14;display:none;z-index:5;touch-action:none}
+#knob{position:absolute;left:40px;top:40px;width:40px;height:40px;border-radius:50%;background:#00e5ffaa}
+#hint{position:fixed;bottom:62px;left:50%;transform:translateX(-50%);font-size:12px;opacity:.75;z-index:5;text-align:center;width:94vw}
+#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:7;display:none}
+@media(max-width:600px){#search input{width:110px}#dname{min-width:140px;font-size:12px}#hdr{gap:5px;padding:8px}button{padding:6px 8px;font-size:13px}#card{left:12px;right:12px;width:auto;top:auto;bottom:70px}}
+</style></head><body>
+<div id="hdr"><span id="logo">NEON HORIZON</span><span class="pill" id="count">🏙 0 homes</span>
+<form id="search"><input id="q" placeholder="Search @nick" autocomplete="off"><button>🔍</button></form>
+<button id="bDay">☀️ Day</button><button id="bWalk">🚶 Walk</button><button id="bHome">🗺</button><button id="bReg">➕ Get a building</button></div>
+<div id="dist"><button id="prev">◀</button><span class="pill" id="dname"></span><button id="next">▶</button></div>
+<div id="hint"></div>
+<div id="lock"></div><div id="toast" class="pill"></div>
+<div id="card"><div class="f" id="cf"></div><h3 id="cn"></h3><div id="ci" style="font-size:13px;opacity:.8"></div><p style="display:flex;gap:6px"><button id="cshare">🔗 Share</button><button id="cclose">✕</button></p></div>
+<div id="reg"><b>Claim your building</b><div class="note">⚠️ You must follow us on Instagram to get a building. Unfollow = your building is freed (checked daily).</div>
+<label>Instagram nick</label><input id="rn" placeholder="@yournick"><label>Country</label><input id="rs" placeholder="Search country…"><div id="cl"></div>
+<p style="display:flex;gap:6px"><button id="rok">Claim</button><button id="rx">Cancel</button></p></div>
+<div id="joy"><div id="knob"></div></div>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+<script type="module" src="app.js"></script></body></html>
