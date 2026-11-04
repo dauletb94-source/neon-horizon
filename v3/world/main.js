@@ -57,9 +57,11 @@ class CityView {
   }
 
   async _init(map) {
-    await loadModels();
-    await loadRealModels();
-    const hd = await loadHDRI(this.renderer);
+    // decoder/network failures must never leave an empty city: procedural towers + cars still build
+    await loadModels().catch((e) => console.error('tower models failed', e));
+    await loadRealModels().catch((e) => console.error('real models failed', e));
+    const hd = await loadHDRI(this.renderer).catch(() => null);
+    this.canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); console.error('WebGL context lost'); }, false);
     if (hd) this.scene.environment = hd.env;
     this.world = new CityWorld(this.scene, map);
     // far skyline is now real 3D geometry (FillerField horizon ring); the painted cylinder backdrop is gone

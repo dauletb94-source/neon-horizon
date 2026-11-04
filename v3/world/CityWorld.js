@@ -37,32 +37,32 @@ export class CityWorld {
     for (const slot of map.slots) {
       const plot = this.slotPlots.get(slot.id);
       const b = new Building(slot.id, new THREE.Vector3(plot.cx, 0, plot.cz), plot.cap);
-      b.rebuild(defaultSpecForSlot(slot.id));
+      try { b.rebuild(defaultSpecForSlot(slot.id)); } catch (e) { console.error('building failed', slot.id, e); }
       b.group.rotation.y = 0;
       this.group.add(b.group);
       this.buildings.set(slot.id, b);
     }
 
     // -------- elevated metro (built first: sky-bridges that would clip it are skipped) --------
-    this.metro = new Metro(this.group);
+    this.metro = safe('metro', () => new Metro(this.group));
     const reserve = (b) => this.metro.blocks(b);
 
     // -------- hero landmark towers: claim whole blocks/plots BEFORE the filler fills the rest --------
-    this.heroes = new HeroTowers(this.group, { count: 12 });
+    this.heroes = safe('heroes', () => new HeroTowers(this.group, { count: 12 }));
 
     // -------- ambient filler skyline (instanced): fills every remaining plot + the far field --------
-    this.filler = new FillerField(this.group, { skipChance: 0.08, reserve });
+    this.filler = safe('filler', () => new FillerField(this.group, { skipChance: 0.08, reserve }));
 
     // -------- sky-bridges between nearby tall named towers --------
-    this.skyBridges = new SkyBridges(this.group, [...this.buildings.values()], reserve);
+    this.skyBridges = safe('skyBridges', () => new SkyBridges(this.group, [...this.buildings.values()], reserve));
 
     // -------- flying cars --------
     const mobile = matchMedia('(pointer:coarse)').matches;
-    this.flyingCars = new FlyingCars(this.group, mobile ? 50 : 110, [...(this.filler.bridgeBoxes || []), ...this.skyBridges.boxes], this.metro);
-    this.groundTraffic = new GroundTraffic(this.group, mobile ? 6 : 12);
+    this.flyingCars = safe('flyingCars', () => new FlyingCars(this.group, mobile ? 50 : 110, [...(this.filler.bridgeBoxes || []), ...this.skyBridges.boxes], this.metro));
+    this.groundTraffic = safe('groundTraffic', () => new GroundTraffic(this.group, mobile ? 6 : 12));
 
     // -------- locked districts --------
-    this.lockedDistricts = new LockedDistricts(this.group, map.districts, toWorld);
+    this.lockedDistricts = safe('lockedDistricts', () => new LockedDistricts(this.group, map.districts, toWorld));
     this._districtById = new Map(map.districts.map((d) => [d.id, d]));
     this._slotById = new Map(map.slots.map((s) => [s.id, s]));
     this._userStatus = new Map(); // slotId -> status string from the live user record
@@ -160,4 +160,12 @@ function hashId(id) {
   const s = String(id);
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
   return h;
+}
+
+// One failing subsystem (e.g. iOS canvas/WebGL memory limits) must not take the whole city down with it.
+function safe(name, make) {
+  try { return make(); } catch (e) {
+    console.error('[CityWorld] ' + name + ' failed:', e);
+    return { ready: true, boxes: [], bridgeBoxes: [], update() {}, blocks() { return false; }, setUnlocked() {} };
+  }
 }

@@ -64,7 +64,7 @@ const bar=document.getElementById('nh-bar'), pct=document.getElementById('nh-pct
 let shown=3; const set=p=>{p=Math.max(shown,Math.min(99,Math.round(p)));shown=p;bar.style.width=p+'%';pct.textContent='Loading… '+p+'%';};
 M.onProgress=(u,l,t)=>set(l/t*100);
 const done=()=>{bar.style.width='100%';pct.textContent='100%';el.style.opacity='0';setTimeout(()=>el.remove(),600);};
-const t0=Date.now();(function poll(){const w=window.App&&App.renderer&&App.renderer.world;if((w&&w.groundTraffic&&w.groundTraffic.ready&&w.flyingCars&&w.flyingCars.ready)||Date.now()-t0>60000)return done();setTimeout(poll,250);})();
+const t0=Date.now();(function poll(){const w=window.App&&App.renderer&&App.renderer.world;if((w&&w.groundTraffic&&w.groundTraffic.ready&&w.flyingCars&&w.flyingCars.ready)||Date.now()-t0>120000)return done();setTimeout(poll,250);})();
 </script>
 <script type="module" src="js/countries.js"></script>
 <script type="module" src="js/i18n_game.js"></script>

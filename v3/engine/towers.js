@@ -41,8 +41,16 @@ function loadTex(url, srgb, repeat) {
 // and the glTF UVs (tools/gen_towers.py: U_TILE 28.8 m, V_TILE 57.6 m) map one cell to one 0.45 x 0.9 m window.
 const CELL = 32, COLS = 64, ROWS = 64;
 function mkRng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+// iOS Safari caps total canvas memory (~384 MB) and getContext('2d') then returns null; 16 x 2048^2 facade canvases (~270 MB) blew it.
+// On phones: downscale each baked facade to 1024^2 and free the canvas pixels once the texture is on the GPU.
+const LOW_MEM = /iPhone|iPad|iPod|Android|Mobi/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 function canvasTex(c, srgb) {
+  if (LOW_MEM && c.width > 1024) {
+    const s = document.createElement('canvas'); s.width = c.width >> 1; s.height = c.height >> 1;
+    const sg = s.getContext('2d'); if (sg) { sg.drawImage(c, 0, 0, s.width, s.height); c.width = c.height = 1; c = s; }
+  }
   const t = new THREE.CanvasTexture(c);
+  if (LOW_MEM) t.onUpdate = () => { t.onUpdate = null; setTimeout(() => { c.width = c.height = 1; }, 0); };
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
   t.anisotropy = maxAniso; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
   return t;
@@ -162,7 +170,7 @@ export async function loadModels() {
       g.scene.traverse((o) => { if (o.isMesh) meshes.push(o); });
       cache.glb.set(`${e.kind}_${e.heightClass}`, { meshes, height: e.height, kind: e.kind });
       res();
-    }, undefined, rej);
+    }, undefined, (err) => { console.error("tower model failed", e.file, err); res(); });
   })));
 }
 
