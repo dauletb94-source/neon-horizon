@@ -211,7 +211,8 @@
     ["Skyscraper Tower", "VertaScan", "CC BY 4.0", "https://sketchfab.com/3d-models/skyscraper-tower-8c141fda071f4f6a927f4d7047f48ec7"],
     ["Singapore Office Skyscraper [FREE]", "99.Miles", "CC BY 4.0", "https://sketchfab.com/3d-models/singapore-office-skyscraper-free-2305f0fe03ba44229a1f768dcb48bd8f"],
     ["modern tower office apartment house home", "zigurat architecture studio", "CC BY 4.0", "https://sketchfab.com/3d-models/modern-tower-office-apartment-house-home-a057bf3379b24c23a18a82ec884e4f04"],
-    ["Sci-Fi Tower", "Jonathan", "CC BY 4.0", "https://sketchfab.com/3d-models/sci-fi-tower-c271103cd2f84ed3992baeda6416bbb0"],
+    ["Futuristic racing car \"Molnia\" (flying car)", "TuppsM", "CC BY 4.0", "https://sketchfab.com/3d-models/futuristic-racing-car-molnia-738a78a4c9154614b90029bf8bb80d61"],
+    ["Cyberpunk 2077 - Quadra V-Tech (flying car)", "Kreanym", "CC BY 4.0", "https://sketchfab.com/3d-models/cyberpunk-2077-quadra-v-tech-6c8bc8c16f2c4e739b2f182e9d060873"],
   ];
   function openFaq() {
     panel("❓ " + t("faq_title"), (body) => {

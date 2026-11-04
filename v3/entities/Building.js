@@ -61,6 +61,7 @@ export class Building {
     this._scaffold = null;
     this._scaffoldStatic = null;
     this._lockFrame = null;
+    this._lockFrame2 = null;
   }
 
   rebuild(spec) {
@@ -173,7 +174,20 @@ export class Building {
   // -------- status FX: remodeling scaffold (pending), dim (unfollowed/locked) --------
   setStatus(status) {
     this._setScaffold(status === 'pending');
-    this._setDim(status === 'unfollowed' || status === 'locked');
+    this._setDim(status === 'unfollowed');
+    this._setLockFrame(status === 'locked');
+  }
+
+  // Locked district teaser: tower stays fully lit (neon, windows, reflections); only a thin amber hologram frame marks it.
+  _setLockFrame(on) {
+    if (on && !this._lockFrame2 && this.tower) {
+      const w = this.footprint.w, d = this.footprint.d, h = Math.max(this.topY, 4);
+      const f = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w * 1.03, h, d * 1.03)),
+        new THREE.LineBasicMaterial({ color: 0xffa14a, transparent: true, opacity: 0.22, depthWrite: false }));
+      f.position.y = h / 2; f.userData.noAudit = true;
+      this.group.add(f); this._lockFrame2 = f;
+    }
+    if (this._lockFrame2) this._lockFrame2.visible = on;
   }
 
   _setScaffold(on) {

@@ -5,13 +5,13 @@
 //   far field  : big plots on the same street grid out to the horizon; heights swell mid-distance then taper into haze
 import * as THREE from '../vendor/three/three.module.js';
 import { modelFor, modelDims, KINDS, HERO_KINDS, materialFor, NEON } from '../engine/towers.js';
-import { PLOTS, FAR_EXTENT } from './layout.js';
+import { PLOTS, FAR_EXTENT, HORIZON_EXTENT } from './layout.js';
 import { realModels, nightMaterial, thickEdgeGeometry, glowEdgeMaterial } from '../engine/realTowers.js';
 import { glassMaterial } from '../engine/towers.js';
 import { SlabBuilder, rectOutline } from './Proc.js';
 
 export const HOME = { x: 42, z: 275 };
-const REAL_CAP = [24, 6, 24, 22]; // max instances per real model (office, tower, terraces, scifi) - triangle budget
+const REAL_CAP = [24, 6, 24]; // max instances per real model (office, tower, terraces, scifi) - triangle budget
 
 function mulberry32(a) {
   return function () {
@@ -48,8 +48,8 @@ export class FillerField {
       if (p.taken) continue;
       const neon = NEON_KEYS[(rnd() * NEON_KEYS.length) | 0], rot = ((rnd() * 4) | 0) * Math.PI / 2;
       const d = dens(p.cx, p.cz), r0 = rnd();
-      if (r0 < 0.10 + 0.12 * (1 - d)) { p.taken = 'filler'; continue; }                                  // open dark plaza
-      if (r0 < 0.28 + 0.16 * (1 - d)) { this._podium(p, rnd, neon); continue; }                         // garden podium
+      if (r0 < 0.20 + 0.16 * (1 - d)) { p.taken = 'filler'; continue; }                                  // open dark plaza
+      if (r0 < 0.40 + 0.16 * (1 - d)) { this._podium(p, rnd, neon); continue; }                         // garden podium
       if (realModels.length && rnd() < 0.30) { // downloaded realistic tower on this plot
         const ri = (rnd() * realModels.length) | 0;
         if (realUsed[ri] < (REAL_CAP[ri] ?? 20)) {
@@ -77,6 +77,14 @@ export class FillerField {
       const hc = HERO_KINDS.includes(fk) ? 3 : pickClass(rnd(), 0.12 * Math.sin(Math.min(1, k * 1.6) * Math.PI)); // tall in the mid-distance
       const taper = 1.25 - 0.55 * k; // lower, hazier silhouettes toward the horizon
       items.push(this._item(fk, hc, p, ((rnd() * 4) | 0) * Math.PI / 2, 0.95 + rnd() * 0.5, (0.55 + rnd() * 0.7) * taper * (hd < 120 ? 0.6 : 1), NEON_KEYS[(rnd() * NEON_KEYS.length) | 0]));
+    }
+    // horizon ring: tall silhouettes that swell then taper, so the skyline is real 3D geometry all the way out
+    for (const p of PLOTS.horizon) {
+      if (rnd() < 0.22) continue;
+      const k = (Math.hypot(p.cx, p.cz) - FAR_EXTENT) / (HORIZON_EXTENT - FAR_EXTENT);
+      const fk = pickKind(rnd, 0.03);
+      const hc = HERO_KINDS.includes(fk) ? 3 : pickClass(rnd(), 0.2);
+      items.push(this._item(fk, hc, p, ((rnd() * 4) | 0) * Math.PI / 2, 0.9 + rnd() * 0.4, (0.9 + rnd() * 1.1) * (1.15 - 0.4 * k), NEON_KEYS[(rnd() * NEON_KEYS.length) | 0]));
     }
     this.count = items.length + realItems.length;
     this._build(items);
@@ -137,7 +145,7 @@ export class FillerField {
       const model = realModels[ri];
       arr.forEach((it, idx) => { q.setFromAxisAngle(up, it.rot); it.m = new THREE.Matrix4().compose(new THREE.Vector3(it.x, 0, it.z), q, new THREE.Vector3(it.sxz, it.sy, it.sxz)); });
       for (const src of model.meshes) {
-        const im = new THREE.InstancedMesh(src.geo, nightMaterial(src.mat, 0xffd9a0), arr.length);
+        const im = new THREE.InstancedMesh(src.geo, nightMaterial(src.mat, 0xffd9a0, model.unit), arr.length);
         arr.forEach((it, idx) => {
           im.setMatrixAt(idx, it.m);
           (this._realRefs.get(it.plot.id) || this._realRefs.set(it.plot.id, []).get(it.plot.id)).push({ im, idx, m: it.m });
@@ -205,6 +213,7 @@ export class FillerField {
           const U = along === 'x' ? [cx - L / 2, y - 0.1, cz + oz, cx + L / 2, y - 0.1, cz + oz] : [cx + ox, y - 0.1, cz - L / 2, cx + ox, y - 0.1, cz + L / 2];
           under.push(...U);
         }
+        (this.bridgeSpans || (this.bridgeSpans = [])).push({ along, line: mid, y, bh });
         n++;
       }
     }

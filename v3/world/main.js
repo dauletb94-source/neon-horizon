@@ -10,7 +10,6 @@ import { setMaxAnisotropy } from '../engine/materials.js';
 import { loadModels, loadHDRI, setAniso } from '../engine/towers.js';
 import { loadRealModels } from '../engine/realTowers.js';
 import { CityWorld, CITY_SIZE, toWorld } from './CityWorld.js';
-import { buildDistantSkyline } from './Skyline.js';
 import { CameraController } from './CameraController.js';
 import { PlaqueLayer } from '../ui/plaques.js';
 import { initBuildMode } from '../editor/BuildMode.js';
@@ -63,8 +62,7 @@ class CityView {
     const hd = await loadHDRI(this.renderer);
     if (hd) this.scene.environment = hd.env;
     this.world = new CityWorld(this.scene, map);
-    this.horizon = buildDistantSkyline(1500, 520); // painted far skyline that carries the city out to the horizon
-    this.scene.add(this.horizon);
+    // far skyline is now real 3D geometry (FillerField horizon ring); the painted cylinder backdrop is gone
     for (const slot of map.slots) {
       const pos = this.world.worldPositionForSlot(slot.id);
       this.plaques.addPin(slot.id, pos, () => {

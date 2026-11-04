@@ -12,7 +12,7 @@ export const HERO_KINDS = [9, 11];
 export const CLASS_HEIGHTS = [16, 30, 50, 78];
 export const NEON = { cyan: 0x22e6ff, magenta: 0xff2fd0, blue: 0x3d7bff, violet: 0x9b5cff, amber: 0xffb02e, green: 0x38ff9c, gold: 0xffd34d };
 const SKINS = [
-  { mull: '#0b1228', paneTop: '#1d3f78', paneBot: '#0e2048', spandrel: '#070c1c', env: 1.7, density: 0.10, lit: ['#ffd9a0', '#ffe9c4', '#9fd8ff', '#7fb4ff'] },   // blue glass, warm + cool rooms
+  { mull: '#0b1228', paneTop: '#1d3f78', paneBot: '#0e2048', spandrel: '#070c1c', env: 1.7, density: 0.16, lit: ['#ffd9a0', '#ffe9c4', '#9fd8ff', '#7fb4ff'] },   // blue glass, warm + cool rooms
   { mull: '#111827', paneTop: '#33557f', paneBot: '#16263f', spandrel: '#0a101c', env: 2.0, density: 0.09, lit: ['#dff2ff', '#a8d6ff', '#ffe3b8', '#8fc0ff'] },   // chrome / pale curtain wall
   { mull: '#150f2a', paneTop: '#37297a', paneBot: '#190f40', spandrel: '#0a0716', env: 1.6, density: 0.11, lit: ['#ffd0e8', '#c9b8ff', '#9fe6ff', '#ffe2b0'] },   // smoked violet glass
 ];
@@ -101,6 +101,16 @@ export function glassMaterial(skinIdx) {
   });
   cache.glass.set(skinIdx, m);
   return m;
+}
+
+// Hero-tower glass: same crisp curtain-wall grid, but mirror-bright (strong env reflection) with denser lit rooms.
+export function heroGlassMaterial(skinIdx = 0) {
+  const key = 'hero' + skinIdx;
+  if (cache.glass.has(key)) return cache.glass.get(key);
+  const m = glassMaterial(skinIdx).clone();
+  m.envMapIntensity = 3.6; m.emissiveIntensity = 1.5; m.roughness = 0.8;
+  m.emissiveMap = litTexture(skinIdx, 9100 + skinIdx * 53); // own lit pattern (denser than ambient towers)
+  cache.glass.set(key, m); return m;
 }
 
 export function neonMaterial(color) {

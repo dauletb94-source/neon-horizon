@@ -82,7 +82,7 @@ export function setupSky(renderer, scene) {
   // navy haze (matching the horizon glow + distant skyline) instead of
   // vanishing into the void; density eased slightly so the skyline backdrop
   // still reads through it.
-  scene.fog = new THREE.FogExp2(0x0a1a4a, 0.0017);
+  scene.fog = new THREE.FogExp2(0x050a1c, 0.00105);
 
   pmrem.dispose();
   return { skyTex };
@@ -92,7 +92,7 @@ export function setupSky(renderer, scene) {
 // Gradient night-sky dome with shader stars and a cyan/magenta city-glow band at the horizon
 // (like city.jpg). Follows the camera so it is always at infinity.
 export function addSkyDome(scene) {
-  const fogC = scene.fog ? scene.fog.color : new THREE.Color(0x081338);
+  const fogC = scene.fog ? scene.fog.color : new THREE.Color(0x050a1c);
   const mat = new THREE.ShaderMaterial({
     uniforms: { uFog: { value: fogC } },
     side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false,
@@ -101,18 +101,18 @@ export function addSkyDome(scene) {
       float h3(vec3 p){ p=fract(p*0.3183099+.1); p*=17.; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
       void main(){
         float y = vD.y;
-        vec3 zen = vec3(0.002,0.004,0.016), mid = vec3(0.008,0.02,0.09), hor = uFog, glow = vec3(0.30,0.10,0.36);
+        vec3 zen = vec3(0.0005,0.001,0.004), mid = vec3(0.003,0.007,0.03), hor = uFog, glow = vec3(0.30,0.10,0.36);
         float t = clamp(y,0.,1.);
-        vec3 c = mix(hor, mid, smoothstep(0.0,0.22,t));
-        c = mix(c, zen, smoothstep(0.18,0.75,t));
-        c += glow * exp(-abs(y-0.09)*14.) * 0.30;                 // magenta bounce right at the skyline
-        c += vec3(0.02,0.16,0.4) * exp(-abs(y-0.14)*12.) * 0.38; // cyan haze band
+        vec3 c = mix(hor, mid, smoothstep(0.0,0.12,t));
+        c = mix(c, zen, smoothstep(0.10,0.5,t));
+        c += glow * exp(-abs(y-0.05)*22.) * 0.10;                 // magenta bounce right at the skyline
+        c += vec3(0.02,0.12,0.35) * exp(-abs(y-0.08)*20.) * 0.16; // cyan haze band
         c = y < 0. ? hor : c;
         // stars (fade toward the horizon)
         vec3 p = vD*420.; vec3 ip = floor(p); float r = h3(ip);
-        float star = step(0.9965, r) * smoothstep(0.08,0.4,y);
+        float star = step(0.991, r) * smoothstep(0.03,0.25,y);
         vec3 f = fract(p)-0.5; star *= smoothstep(0.5,0.0,length(f))*(0.5+0.5*h3(ip+7.));
-        c += vec3(0.85,0.92,1.)*star*1.6;
+        c += mix(vec3(0.7,0.85,1.),vec3(1.,0.9,0.8),h3(ip+3.))*star*2.2;
         gl_FragColor = vec4(c,1.);
       }`,
   });

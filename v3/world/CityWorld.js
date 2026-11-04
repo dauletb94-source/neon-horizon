@@ -6,11 +6,12 @@ import * as THREE from '../vendor/three/three.module.js';
 import { Building, defaultSpecForSlot } from '../entities/Building.js';
 import { buildGround } from './ground.js';
 import { FillerField } from './FillerField.js';
+import { HeroTowers } from './HeroTowers.js';
 import { FlyingCars } from './FlyingCars.js';
 import { SkyBridges } from './SkyBridges.js';
 import { LockedDistricts } from './LockedDistricts.js';
 
-import { CITY_SIZE, CELL, ROAD_EVERY, FAR_EXTENT, assignSlots, auditBoxes } from './layout.js';
+import { CITY_SIZE, CELL, ROAD_EVERY, FAR_EXTENT, HORIZON_EXTENT, assignSlots, auditBoxes } from './layout.js';
 export { CITY_SIZE };
 
 export function toWorld(xPercent, yPercent) {
@@ -24,7 +25,7 @@ export class CityWorld {
     this.group = new THREE.Group();
     scene.add(this.group);
 
-    this.ground = buildGround(CITY_SIZE, CELL, ROAD_EVERY, FAR_EXTENT);
+    this.ground = buildGround(CITY_SIZE, CELL, ROAD_EVERY, HORIZON_EXTENT);
     this.group.add(this.ground);
 
     // -------- named/claimable buildings (full modular, individually addressable) --------
@@ -40,6 +41,9 @@ export class CityWorld {
       this.buildings.set(slot.id, b);
     }
 
+    // -------- hero landmark towers: claim whole blocks/plots BEFORE the filler fills the rest --------
+    this.heroes = new HeroTowers(this.group, { count: 12 });
+
     // -------- ambient filler skyline (instanced): fills every remaining plot + the far field --------
     this.filler = new FillerField(this.group, { skipChance: 0.08 });
 
@@ -47,7 +51,7 @@ export class CityWorld {
     this.skyBridges = new SkyBridges(this.group, [...this.buildings.values()]);
 
     // -------- flying cars --------
-    this.flyingCars = new FlyingCars(this.group, 16, CITY_SIZE);
+    this.flyingCars = new FlyingCars(this.group, 40, this.filler.bridgeSpans || []);
 
     // -------- locked districts --------
     this.lockedDistricts = new LockedDistricts(this.group, map.districts, toWorld);

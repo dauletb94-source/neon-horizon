@@ -20,6 +20,7 @@ export const NEAR_BLOCKS = 6;                    // blocks per axis in the playa
 export const NEAR_CAP = CELL - 2.8;              // max footprint of a near-zone building (13.35)
 export const FAR_CAP = 24;                       // max footprint of a far-zone building
 export const FAR_EXTENT = CITY_SIZE * 2.6;       // radius of the skyline field
+export const HORIZON_EXTENT = 2500;              // radius of the thin 3D horizon ring (1 plot per block) beyond the far field
 
 export const roadCenter = (k) => -HALF + (ROAD_EVERY * k + 0.5) * CELL;
 
@@ -52,7 +53,7 @@ export function pointOnRoad(x, z, clear = 0) {
 
 // ---------------------------------------------------------------- plots
 export function buildPlots() {
-  const near = [], far = [];
+  const near = [], far = [], horizon = [];
   const nearMax = roadCenter(NEAR_BLOCKS - 1) + PERIOD; // beyond the last near street
   // near zone: 3x3 cells per block, cells 4k+1..4k+3
   for (let bk = 0; bk < NEAR_BLOCKS; bk++) {
@@ -77,8 +78,17 @@ export function buildPlots() {
       }
     }
   }
+  // horizon ring: one big plot per block between the far field and the horizon, same street grid (never on a road)
+  const hMax = Math.ceil(HORIZON_EXTENT / PERIOD) + 1;
+  for (let kx = -hMax; kx <= hMax; kx++) {
+    for (let kz = -hMax; kz <= hMax; kz++) {
+      const bx = roadCenter(kx) + PERIOD / 2, bz = roadCenter(kz) + PERIOD / 2, r = Math.hypot(bx, bz);
+      if (r <= FAR_EXTENT || r > HORIZON_EXTENT) continue;
+      horizon.push({ id: `h${kx}_${kz}`, zone: 'horizon', cx: bx, cz: bz, size: 26.4, cap: FAR_CAP, taken: null });
+    }
+  }
   void nearMax;
-  return { near, far };
+  return { near, far, horizon };
 }
 
 export const PLOTS = buildPlots();

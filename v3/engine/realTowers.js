@@ -10,7 +10,6 @@ export const REAL_FILES = [
   { file: 'singapore_office.glb', name: 'office', edge: 38 },
   { file: 'skyscraper_tower.glb', name: 'tower', edge: 38 },
   { file: 'modern_tower_terraces.glb', name: 'terraces', edge: 38 },
-  { file: 'scifi_tower.glb', name: 'scifi', edge: 30 },
 ];
 export const REAL_COUNT = REAL_FILES.length;
 
@@ -33,13 +32,13 @@ export function thickEdgeGeometry(pts, w = 0.4) {
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setIndex(new THREE.BufferAttribute(idx, 1));
   return g;
 }
-export const glowEdgeMaterial = (hex, k = 2.2) => new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), toneMapped: false, side: THREE.DoubleSide, fog: false });
+export const glowEdgeMaterial = (hex, k = 1.5) => new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), toneMapped: false, side: THREE.DoubleSide, fog: false });
 const models = [];
 export const realModels = models;
 
 const nightCache = new Map();
-export function nightMaterial(src, tint) {
-  const key = src.uuid + '|' + tint;
+export function nightMaterial(src, tint, unit = 1) {
+  const key = src.uuid + '|' + tint + '|' + unit;
   if (nightCache.has(key)) return nightCache.get(key);
   const m = new THREE.MeshStandardMaterial({
     map: src.map || null, normalMap: src.normalMap || null,
@@ -53,19 +52,19 @@ export function nightMaterial(src, tint) {
   m.emissiveIntensity = 1.0;
   const lit = new THREE.Color(tint);
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uLit = { value: lit };
+    sh.uniforms.uLit = { value: lit }; sh.uniforms.uUnit = { value: unit };
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vLocal; varying vec3 vLocN;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvLocal = position; vLocN = normal;');
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', `#include <common>
-varying vec3 vLocal; varying vec3 vLocN; uniform vec3 uLit;
+varying vec3 vLocal; varying vec3 vLocN; uniform vec3 uLit; uniform float uUnit;
 float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return fract(p.x*p.y); }`)
       .replace('#include <emissivemap_fragment>', `
 {
   float wall = 1.0 - smoothstep(0.25, 0.5, abs(normalize(vLocN).y));   // walls only, never roofs/ledges
   float ang = vLocal.x + vLocal.z * 1.0;
-  vec2 g = vec2(ang / 0.9, vLocal.y / 1.7);
+  vec2 g = vec2(ang / (0.9 * uUnit), vLocal.y / (1.7 * uUnit));
   vec2 cell = floor(g), fc = fract(g);
   float r = h21(cell);
   float floorBias = h21(vec2(cell.y, 7.0));
@@ -114,7 +113,7 @@ export async function loadRealModels() {
       const cx = (box.min.x + box.max.x) / 2, cz = (box.min.z + box.max.z) / 2;
       const T = new THREE.Matrix4().makeTranslation(-cx, -box.min.y, -cz);
       for (const m of meshes) m.geo.applyMatrix4(T);
-      models[i] = { meshes, height: size.y, w: size.x, d: size.z, name: f.name, edge: f.edge };
+      models[i] = { meshes, height: size.y, w: size.x, d: size.z, name: f.name, edge: f.edge, unit: Math.max(0.6, size.y / 60) };
       res();
     }, undefined, () => { console.warn('real model failed', f.file); res(); });
   })));
@@ -126,9 +125,16 @@ export async function loadRealModels() {
       if (s.geo.attributes.position.count > 60000) continue; // skip dense scan meshes; outline from the lighter parts
       const e = new THREE.EdgesGeometry(s.geo, m.edge);
       // keep only the long structural edges (corner pillars, crown rims, slab lines) -> clean neon outline, no mullion noise
-      const a = e.attributes.position.array, keep = [], minLen = m.height * 0.07;
+      const a = e.attributes.position.array, keep = [], minLen = m.height * 0.12, seen = new Set(), hw = m.w / 2, hd = m.d / 2;
       for (let k = 0; k < a.length; k += 6) {
-        if (Math.hypot(a[k + 3] - a[k], a[k + 4] - a[k + 1], a[k + 5] - a[k + 2]) >= minLen) keep.push(a[k], a[k + 1], a[k + 2], a[k + 3], a[k + 4], a[k + 5]);
+        const dx = a[k + 3] - a[k], dy = a[k + 4] - a[k + 1], dz = a[k + 5] - a[k + 2];
+        if (Math.hypot(dx, dy, dz) < minLen) continue;
+        const mx = (a[k] + a[k + 3]) / 2, my = (a[k + 1] + a[k + 4]) / 2, mz = (a[k + 2] + a[k + 5]) / 2;
+        if (Math.max(Math.abs(mx) / hw, Math.abs(mz) / hd) < 0.9) continue; // outer silhouette only: no mullions / interior frames
+        const vert = Math.abs(dy) > 0.9 * Math.hypot(dx, dy, dz);
+        const key = (vert ? 'v' : 'h') + Math.round(mx / (0.12 * m.w)) + ',' + Math.round(mz / (0.12 * m.d)) + (vert ? '' : ',' + Math.round(my / (0.06 * m.height)));
+        if (seen.has(key)) continue; seen.add(key);
+        keep.push(a[k], a[k + 1], a[k + 2], a[k + 3], a[k + 4], a[k + 5]);
       }
       if (!keep.length) continue;
       const kg = new THREE.BufferGeometry(); kg.setAttribute('position', new THREE.Float32BufferAttribute(keep, 3));
@@ -147,7 +153,7 @@ export function instantiateReal(idx, H, { maxFoot = 13, neon = 'cyan', tint = 0x
   const sxz = sxz0, sy = Math.min(sy0, sxz0 * 1.7);
   const g = new THREE.Group();
   for (const s of m.meshes) {
-    const mesh = new THREE.Mesh(s.geo, nightMaterial(s.mat, tint));
+    const mesh = new THREE.Mesh(s.geo, nightMaterial(s.mat, tint, m.unit));
     mesh.userData.slot = 'glass';
     g.add(mesh);
   }
