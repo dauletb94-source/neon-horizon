@@ -10,10 +10,12 @@ const MAX_DIST = 46;
 const MIN_HEIGHT = 20;
 
 export class SkyBridges {
-  constructor(scene, namedBuildings) {
+  constructor(scene, namedBuildings, reserve = null) {
+    this.reserve = reserve;
     this.group = new THREE.Group();
     scene.add(this.group);
     this.pulses = [];
+    this.boxes = []; // conservative AABBs (x0,x1,z0,z1,y0,y1) of every span, for flying-car / metro clearance
 
     const tall = namedBuildings.filter((b) => b.topY >= MIN_HEIGHT);
     const used = new Set();
@@ -27,6 +29,8 @@ export class SkyBridges {
         if (dist < bestDist && dist < MAX_DIST) { bestDist = dist; best = tall[j]; }
       }
       if (!best) continue;
+      const h0 = Math.min(tall[i].topY, best.topY) * 0.58, a = tall[i].group.position, b = best.group.position;
+      if (this.reserve && this.reserve({ x0: Math.min(a.x, b.x) - 2, x1: Math.max(a.x, b.x) + 2, z0: Math.min(a.z, b.z) - 2, z1: Math.max(a.z, b.z) + 2, y0: h0 - 1, y1: h0 + 1.5 })) continue;
       used.add(tall[i].id); used.add(best.id);
       built++;
       this._addBridge(tall[i], best);
@@ -54,6 +58,7 @@ export class SkyBridges {
     dash.position.y = 0.82; g.add(dash);
     g.traverse((o) => { o.userData.noAudit = true; }); // elevated span over the street, not a building on it
     this.group.add(g);
+    this.boxes.push({ x0: Math.min(p0.x, p1.x) - 2, x1: Math.max(p0.x, p1.x) + 2, z0: Math.min(p0.z, p1.z) - 2, z1: Math.max(p0.z, p1.z) + 2, y0: h - 1, y1: h + 1.5 });
     this.pulses.push({ dash, len, speed: 0.12 + Math.random() * 0.08, phase: Math.random() });
   }
 

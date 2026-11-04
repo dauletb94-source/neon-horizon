@@ -32,7 +32,8 @@ function pickClass(r, boost = 0) {
 }
 
 export class FillerField {
-  constructor(parent, { skipChance = 0.08 } = {}) {
+  constructor(parent, { skipChance = 0.08, reserve = null } = {}) {
+    this.reserve = reserve;
     this.group = new THREE.Group();
     parent.add(this.group);
     const rnd = mulberry32(90210);
@@ -204,6 +205,7 @@ export class FillerField {
         if (a1 - a0 < 6) continue;
         const L = a1 - a0, mid = (a0 + a1) / 2, cx = along === 'x' ? mid : p.cx, cz = along === 'x' ? p.cz : mid;
         const sx = along === 'x' ? L : bw, sz = along === 'x' ? bw : L;
+        if (this.reserve && this.reserve({ x0: cx - sx / 2, x1: cx + sx / 2, z0: cz - sz / 2, z1: cz + sz / 2, y0: y - 0.2, y1: y + bh + 0.3 })) continue;
         sb.box(cx, y, cz, sx, bh, sz, { walls: true, top: true });
         sb.box(cx, y, cz, sx - 1.2, 0, sz - 1.2, { walls: false, top: true, topY: y + bh + 0.2 });   // garden strip on the roof
         for (const sgn of [-1, 1]) { // glowing rails along the roof edge + underglow
@@ -214,6 +216,7 @@ export class FillerField {
           under.push(...U);
         }
         (this.bridgeSpans || (this.bridgeSpans = [])).push({ along, line: mid, y, bh });
+        (this.bridgeBoxes || (this.bridgeBoxes = [])).push({ x0: cx - sx / 2, x1: cx + sx / 2, z0: cz - sz / 2, z1: cz + sz / 2, y0: y - 0.2, y1: y + bh + 0.3 });
         n++;
       }
     }

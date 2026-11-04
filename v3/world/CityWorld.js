@@ -8,6 +8,8 @@ import { buildGround } from './ground.js';
 import { FillerField } from './FillerField.js';
 import { HeroTowers } from './HeroTowers.js';
 import { FlyingCars } from './FlyingCars.js';
+import { GroundTraffic } from './GroundTraffic.js';
+import { Metro } from './Metro.js';
 import { SkyBridges } from './SkyBridges.js';
 import { LockedDistricts } from './LockedDistricts.js';
 
@@ -41,17 +43,23 @@ export class CityWorld {
       this.buildings.set(slot.id, b);
     }
 
+    // -------- elevated metro (built first: sky-bridges that would clip it are skipped) --------
+    this.metro = new Metro(this.group);
+    const reserve = (b) => this.metro.blocks(b);
+
     // -------- hero landmark towers: claim whole blocks/plots BEFORE the filler fills the rest --------
     this.heroes = new HeroTowers(this.group, { count: 12 });
 
     // -------- ambient filler skyline (instanced): fills every remaining plot + the far field --------
-    this.filler = new FillerField(this.group, { skipChance: 0.08 });
+    this.filler = new FillerField(this.group, { skipChance: 0.08, reserve });
 
     // -------- sky-bridges between nearby tall named towers --------
-    this.skyBridges = new SkyBridges(this.group, [...this.buildings.values()]);
+    this.skyBridges = new SkyBridges(this.group, [...this.buildings.values()], reserve);
 
     // -------- flying cars --------
-    this.flyingCars = new FlyingCars(this.group, 40, this.filler.bridgeSpans || []);
+    const mobile = matchMedia('(pointer:coarse)').matches;
+    this.flyingCars = new FlyingCars(this.group, mobile ? 50 : 110, [...(this.filler.bridgeBoxes || []), ...this.skyBridges.boxes], this.metro);
+    this.groundTraffic = new GroundTraffic(this.group, mobile ? 6 : 12);
 
     // -------- locked districts --------
     this.lockedDistricts = new LockedDistricts(this.group, map.districts, toWorld);
@@ -109,6 +117,8 @@ export class CityWorld {
     this.ground.userData.trailMat.uniforms.uTime.value = t;
     for (const b of this.buildings.values()) b.update(t);
     this.flyingCars.update(t);
+    this.groundTraffic.update(t);
+    this.metro.update(t);
     this.skyBridges.update(t);
   }
 

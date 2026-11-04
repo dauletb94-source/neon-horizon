@@ -119,7 +119,8 @@ export class CameraController {
 
   _updateFlyWalk(dt) {
     const speed = (this.mode === 'walk' ? 10 : 42) * (this._keys['shift'] ? 2.4 : 1);
-    let moveX = this._joyVec.x, moveZ = -this._joyVec.y;
+    // moveZ < 0 = forward. Joystick pushed up gives joyVec.y < 0, so it maps straight through (it was negated before = inverted).
+    let moveX = this._joyVec.x, moveZ = this._joyVec.y;
     if (this._keys['w'] || this._keys['arrowup']) moveZ -= 1;
     if (this._keys['s'] || this._keys['arrowdown']) moveZ += 1;
     if (this._keys['a'] || this._keys['arrowleft']) moveX -= 1;
@@ -128,7 +129,7 @@ export class CameraController {
     if (len > 1) { moveX /= len; moveZ /= len; }
 
     const forward = new THREE.Vector3(Math.sin(this._yaw), 0, Math.cos(this._yaw));
-    const right = new THREE.Vector3(forward.z, 0, -forward.x);
+    const right = new THREE.Vector3(-forward.z, 0, forward.x); // camera-right = forward x up (D / stick-right strafes right)
     this.camera.position.addScaledVector(forward, -moveZ * speed * dt);
     this.camera.position.addScaledVector(right, moveX * speed * dt);
 

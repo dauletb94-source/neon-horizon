@@ -13,6 +13,6 @@ No skyscraper on Sketchfab is both downloadable and CC0 (the CC0 filter only ret
 - **modern tower office apartment house home** by zigurat architecture studio — https://sketchfab.com/3d-models/modern-tower-office-apartment-house-home-a057bf3379b24c23a18a82ec884e4f04 (CC BY 4.0)
 
 ## Flying cars (Sketchfab, CC Attribution 4.0 — attribution required)
-`assets/models/cars/*.glb`, instanced on sky lanes by `world/FlyingCars.js` (geometry/textures unmodified; scaled and re-oriented at load).
+`assets/models/cars/*.glb`, used by flying cars (`world/FlyingCars.js`) and ground traffic (`world/GroundTraffic.js`) via `world/CarModels.js` (geometry/textures unmodified; scaled and re-oriented at load, Quadra's baked ground plane removed). The metro (`world/Metro.js`) is self-authored geometry.
 - **Futuristic racing car "Molnia"** by TuppsM — https://sketchfab.com/3d-models/futuristic-racing-car-molnia-738a78a4c9154614b90029bf8bb80d61 (CC BY 4.0)
 - **Cyberpunk 2077 - Quadra V-Tech** by Kreanym — https://sketchfab.com/3d-models/cyberpunk-2077-quadra-v-tech-6c8bc8c16f2c4e739b2f182e9d060873 (CC BY 4.0)
