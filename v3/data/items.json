@@ -1,0 +1,68 @@
+{
+  "heightLevels": [
+    { "level": 1, "meters": 50, "worldHeight": 8 },
+    { "level": 2, "meters": 80, "worldHeight": 14 },
+    { "level": 3, "meters": 120, "worldHeight": 21 },
+    { "level": 4, "meters": 180, "worldHeight": 30 },
+    { "level": 5, "meters": 260, "worldHeight": 40 },
+    { "level": 6, "meters": 360, "worldHeight": 51 },
+    { "level": 7, "meters": 500, "worldHeight": 63 },
+    { "level": 8, "meters": 700, "worldHeight": 76 },
+    { "level": 9, "meters": 950, "worldHeight": 90 },
+    { "level": 10, "meters": 1300, "worldHeight": 105 }
+  ],
+  "facades": [
+    { "key": "blueGlass", "label": "Blue glass" },
+    { "key": "smokedGlass", "label": "Smoked glass" },
+    { "key": "chrome", "label": "Chrome" },
+    { "key": "blackSteel", "label": "Black steel" },
+    { "key": "whiteCeramic", "label": "White ceramic" }
+  ],
+  "neonColors": [
+    { "key": "cyan", "hex": "#2be7ff" },
+    { "key": "magenta", "hex": "#ff3bd4" },
+    { "key": "blue", "hex": "#3b6bff" },
+    { "key": "violet", "hex": "#9b4bff" },
+    { "key": "amber", "hex": "#ffb23b" },
+    { "key": "green", "hex": "#39ffb0" },
+    { "key": "red", "hex": "#ff3b5c" },
+    { "key": "white", "hex": "#eaf6ff" }
+  ],
+  "crownStyles": [
+    { "key": "spire", "label": "Spire" },
+    { "key": "slanted", "label": "Slanted top" },
+    { "key": "helipad", "label": "Helipad" },
+    { "key": "antenna", "label": "Antenna array" },
+    { "key": "garden", "label": "Rooftop garden" }
+  ],
+  "rooftopItems": [
+    { "key": "garden", "label": "Rooftop garden" },
+    { "key": "pool", "label": "Rooftop pool" },
+    { "key": "helipad", "label": "Helipad" },
+    { "key": "solar", "label": "Solar array" },
+    { "key": "billboard", "label": "Billboard" }
+  ],
+  "groundItems": [
+    { "key": "plaza", "label": "Plaza" },
+    { "key": "fountain", "label": "Fountain" },
+    { "key": "trees", "label": "Trees" },
+    { "key": "cafe", "label": "Street cafe" }
+  ],
+  "regularUpgrades": {
+    "floors": { "label": "upgradeTaller", "baseCost": 30, "costStep": 22, "valueAdd": 9 },
+    "neonColor": { "label": "upgradeNeonColor", "baseCost": 25, "valueAdd": 10 },
+    "garden": { "label": "upgradeGarden", "baseCost": 60, "valueAdd": 22 },
+    "billboard": { "label": "upgradeBillboard", "baseCost": 40, "valueAdd": 16 }
+  },
+  "premiumUpgrades": {
+    "hologram": { "label": "paidHologram", "priceUsd": 0.99, "valueAdd": 35 },
+    "flyingCar": { "label": "paidFlyingCar", "priceUsd": 0.99, "valueAdd": 50 },
+    "goldenNeon": { "label": "paidRainbow", "priceUsd": 0.99, "valueAdd": 40 },
+    "helipad": { "label": "paidHelipad", "priceUsd": 0.99, "valueAdd": 45 },
+    "searchlights": { "label": "paidSpotlight", "priceUsd": 0.99, "valueAdd": 30 },
+    "aurora": { "label": "paidAurora", "priceUsd": 0.99, "valueAdd": 30 },
+    "flagPole": { "label": "paidFlagPole", "priceUsd": 0.99, "valueAdd": 20 },
+    "ledFacade": { "label": "paidLedFacade", "priceUsd": 0.99, "valueAdd": 38 }
+  },
+  "premiumUnlockFollowers": 10000
+}

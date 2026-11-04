@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>NEON HORIZON — claim your building in the city</title>
+<meta name="description" content="Every follower gets a building in a futuristic neon city. Find your building, build it, upgrade it, share it.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏙️</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <div id="sky-bg"></div>
+  <div id="stars"></div>
+  <div id="map-viewport"></div>
+  <div id="light-streaks"></div>
+  <div class="vignette"></div>
+
+  <header id="app-header">
+    <div class="header-row">
+      <div class="pill brand-pill">
+        <span class="brand-name" id="brand-name">NEON HORIZON</span>
+        <span class="brand-tag" id="brand-tag">A NEON HORIZON PROJECT</span>
+      </div>
+      <div class="header-right">
+        <button class="pill coins-btn" id="coins-btn">🪙 <span id="coins-balance">0</span></button>
+        <select id="lang-picker" aria-label="Language"></select>
+        <button class="icon-btn" id="settings-btn" title="Settings">⚙️</button>
+      </div>
+    </div>
+    <div class="header-row" id="hud-row">
+      <div class="pill hidden" id="level-pill"><span id="lvl-badge">1</span><div class="lvl-col"><span id="lvl-nick"></span><div class="xp-bar"><i id="xp-fill"></i></div><span id="lvl-xp"></span></div></div>
+      <button class="pill hud-btn" id="biz-btn" title="Businesses">🏢</button>
+      <button class="pill hud-btn" id="quests-btn" title="Quests">🎯<span class="hud-dot hidden" id="quests-dot">0</span></button>
+      <button class="pill hud-btn" id="invite-btn" title="Invite friends">👥</button>
+      <button class="pill hud-btn faq-btn" id="faq-btn" title="FAQ">FAQ</button>
+    </div>
+    <div class="header-row">
+      <div class="pill residents-pill">🏙️ <strong id="residents-count">—</strong> <span id="residents-label">residents</span></div>
+      <div class="pill newtoday-pill" id="newtoday-pill">✨ New today: <strong id="new-today">0</strong> buildings</div>
+    </div>
+  </header>
+
+  <div id="bottom-bar">
+    <span class="at">@</span>
+    <input id="search-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="your_handle">
+    <button id="find-btn">Find my building</button>
+  </div>
+
+  <div id="modal-root"></div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js" } }
+</script>
+<script type="module" src="js/countries.js"></script>
+<script type="module" src="js/i18n_game.js"></script>
+<script type="module" src="js/i18n_faq.js"></script>
+<script type="module" src="js/i18n.js"></script>
+<script type="module" src="js/store.js"></script>
+<script type="module" src="js/economy.js"></script>
+<script type="module" src="js/city.js"></script>
+<script type="module" src="world/main.js"></script>
+<script type="module" src="config/payment-links.js"></script>
+<script type="module" src="js/qr.js"></script>
+<script type="module" src="js/game.js"></script>
+<script type="module" src="js/ui.js"></script>
+<script type="module" src="js/panels.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

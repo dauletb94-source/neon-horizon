@@ -1,0 +1,28 @@
+{
+  "newbieDays": 7,
+  "newbie": [
+    { "id": "n_register", "metric": "register", "target": 1, "coins": 20, "xp": 60, "icon": "📝" },
+    { "id": "n_flag", "metric": "flag", "target": 1, "coins": 15, "xp": 60, "icon": "🚩" },
+    { "id": "n_upgrade", "metric": "upgrades", "target": 1, "coins": 25, "xp": 120, "icon": "⬆️" },
+    { "id": "n_coffee", "metric": "built_coffee", "target": 1, "coins": 40, "xp": 150, "icon": "☕" },
+    { "id": "n_collect", "metric": "collects", "target": 1, "coins": 25, "xp": 100, "icon": "💰" },
+    { "id": "n_visit", "metric": "visits", "target": 1, "coins": 15, "xp": 80, "icon": "🚶" },
+    { "id": "n_like3", "metric": "likesGiven", "target": 3, "coins": 25, "xp": 100, "icon": "❤️" },
+    { "id": "n_invite", "metric": "refVerified", "target": 1, "coins": 100, "xp": 300, "icon": "👥" },
+    { "id": "n_share", "metric": "shares", "target": 1, "coins": 20, "xp": 80, "icon": "📤" },
+    { "id": "n_level5", "metric": "level", "target": 5, "coins": 100, "xp": 200, "icon": "🏅" }
+  ],
+  "daily": [
+    { "id": "d_login", "metric": "login", "target": 1, "coins": 10, "xp": 20, "icon": "🌅" },
+    { "id": "d_visit3", "metric": "visits", "target": 3, "coins": 10, "xp": 30, "icon": "🚶" },
+    { "id": "d_like5", "metric": "likesGiven", "target": 5, "coins": 10, "xp": 30, "icon": "❤️" },
+    { "id": "d_collect", "metric": "collects", "target": 2, "coins": 15, "xp": 40, "icon": "💰" },
+    { "id": "d_upgrade", "metric": "bizUpgrades", "target": 1, "coins": 20, "xp": 50, "icon": "🔧" }
+  ],
+  "weekly": [
+    { "id": "w_collect", "metric": "collects", "target": 15, "coins": 80, "xp": 200, "icon": "💰" },
+    { "id": "w_upgrade", "metric": "bizUpgrades", "target": 5, "coins": 120, "xp": 300, "icon": "🔧" },
+    { "id": "w_visit", "metric": "visits", "target": 15, "coins": 60, "xp": 150, "icon": "🚶" },
+    { "id": "w_login", "metric": "login", "target": 5, "coins": 100, "xp": 250, "icon": "🔥" }
+  ]
+}

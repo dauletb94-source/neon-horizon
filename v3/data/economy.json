@@ -1,0 +1,147 @@
+{
+  "startingCoins": 150,
+  "dailyCheckinLadder": [
+    10,
+    15,
+    20,
+    25,
+    30,
+    40,
+    50
+  ],
+  "dailyCheckinCapDay": 7,
+  "dailyRaffle": {
+    "min": 5,
+    "max": 200,
+    "jackpotChance": 0.01,
+    "jackpotAmount": 500
+  },
+  "inviteFriendReward": 100,
+  "shareLinkDailyReward": 10,
+  "quests": {
+    "visitThreeNeighbors": 10,
+    "likeFiveBuildings": 10,
+    "genericRange": [
+      5,
+      20
+    ],
+    "definitions": "data/quests.json"
+  },
+  "referralLadder": [
+    {
+      "friends": 1,
+      "reward": "100 coins",
+      "coins": 100
+    },
+    {
+      "friends": 3,
+      "reward": "300 coins + neon color",
+      "coins": 300,
+      "neon": true
+    },
+    {
+      "friends": 5,
+      "reward": "free premium upgrade of choice",
+      "premiumChoice": [
+        "flyingCar",
+        "hologram",
+        "rainbow"
+      ]
+    },
+    {
+      "friends": 10,
+      "reward": "Ambassador crown + badge",
+      "badge": "ambassador",
+      "coins": 1000
+    },
+    {
+      "friends": 25,
+      "reward": "landmark plot near center",
+      "landmark": true,
+      "coins": 5000
+    }
+  ],
+  "referral": {
+    "deviceLimit": 1,
+    "revokeWindowDays": 7,
+    "perFriendXp": 300,
+    "perFriendCoins": 0
+  },
+  "districtLandValue": {
+    "0": 90,
+    "1": 110,
+    "2": 130,
+    "3": 150,
+    "4": 175,
+    "5": 200
+  },
+  "levelCurve": {
+    "formula": "xpToNext = round(100 * level^1.5)",
+    "coef": 100,
+    "exp": 1.5,
+    "maxLevel": 100,
+    "milestoneEvery": 10,
+    "milestoneCoinsCoef": 50,
+    "milestoneCoinsExp": 1.5,
+    "levelUpChestCoinsCoef": 8,
+    "levelUpChestCoinsExp": 1.3
+  },
+  "xp": {
+    "dailyLogin": 25,
+    "loginStreakBonusPerDay": 5,
+    "loginStreakCapDays": 7,
+    "buildingUpgrade": 40,
+    "businessBuild": 250,
+    "businessUpgradeBase": 40,
+    "businessUpgradePerLevel": 8,
+    "collectCoef": 0.5,
+    "collectExp": 0.57,
+    "likeGiven": 2,
+    "visitGiven": 2,
+    "likeReceived": 3,
+    "visitReceived": 1,
+    "share": 15,
+    "verify": 100
+  },
+  "plotSlots": {
+    "base": 3,
+    "everyLevels": 4,
+    "max": 24
+  },
+  "businesses": {
+    "maxLevel": 25,
+    "costGrowthPerLevel": 1.15,
+    "incomeGrowthPerLevel": 1.1,
+    "upgradeCostFactor": 0.35,
+    "storageMaxHours": 24,
+    "managerFee": 0.1,
+    "managerOfflineCapHours": 72,
+    "requiresVerified": true
+  },
+  "chests": {
+    "starter": {
+      "coins": 200,
+      "xp": 150
+    },
+    "comeback": {
+      "afterDays": 3,
+      "coins": 150,
+      "xp": 50
+    },
+    "streak": {
+      "everyDays": 7,
+      "coins": 150,
+      "xp": 100
+    }
+  },
+  "costCurve": {
+    "note": "tier buildCost = 120*3.6^tier (rounded); baseIncomePerHour = buildCost / payback; payback rises 4h + 68h*(i/11)^1.6 (coffee 4h -> bank ~49h -> spaceport 72h). See tools/economy_sim.js and docs/ECONOMY.md",
+    "costGrowthPerLevel": 1.15,
+    "incomeGrowthPerLevel": 1.1
+  },
+  "maintenance": {
+    "note": "daily upkeep/tax = dailyPct * business value (build cost + upgrades), accrues per business (max maxAccrualDays), deducted from income when collected (manual collect or manager settle); never taken from coins in hand, never negative",
+    "dailyPct": 0.02,
+    "maxAccrualDays": 3
+  }
+}
