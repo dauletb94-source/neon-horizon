@@ -5,6 +5,7 @@
 //   neon / lamp / garden / trim -> unlit emissive or plain PBR
 import * as THREE from '../vendor/three/three.module.js';
 import { GLTFLoader } from '../vendor/three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from '../vendor/three/addons/libs/meshopt_decoder.module.js';
 import { RGBELoader } from '../vendor/three/addons/loaders/RGBELoader.js';
 
 export const KINDS = 12;
@@ -152,7 +153,7 @@ export function materialFor(name, { skin = 0, neon = 'cyan' } = {}) {
   return fixedMat(name);
 }
 
-const gltf = new GLTFLoader();
+const gltf = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 export async function loadModels() {
   const manifest = await (await fetch('assets/models/manifest.json')).json();
   await Promise.all(manifest.map((e) => new Promise((res, rej) => {

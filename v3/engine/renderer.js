@@ -14,7 +14,7 @@ export function createRenderPipeline(canvas, scene, camera) {
     powerPreference: 'high-performance',
     logarithmicDepthBuffer: false,
   });
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  renderer.setPixelRatio(Math.min((/iPhone|iPad|Android|Mobi/i.test(navigator.userAgent) ? 1.5 : 2), window.devicePixelRatio || 1));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.8;

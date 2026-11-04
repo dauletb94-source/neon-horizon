@@ -9,6 +9,11 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<div id="nh-loader" style="position:fixed;inset:0;z-index:99999;background:#05030f;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 16px system-ui,sans-serif;color:#e8f6ff;transition:opacity .5s">
+  <div style="font-size:26px;letter-spacing:4px;color:#ff3ec8;text-shadow:0 0 12px #ff3ec8">NEON HORIZON</div>
+  <div style="margin:18px 0 8px;width:min(70vw,320px);height:8px;border-radius:4px;background:#1b1433;overflow:hidden"><i id="nh-bar" style="display:block;height:100%;width:3%;background:linear-gradient(90deg,#29e6ff,#ff3ec8);transition:width .3s"></i></div>
+  <div id="nh-pct">Loading… 0%</div>
+</div>
 <div id="app">
   <div id="sky-bg"></div>
   <div id="stars"></div>
@@ -52,6 +57,14 @@
 
 <script type="importmap">
 { "imports": { "three": "./vendor/three/three.module.js" } }
+</script>
+<script type="module">
+import { DefaultLoadingManager as M } from 'three';
+const bar=document.getElementById('nh-bar'), pct=document.getElementById('nh-pct'), el=document.getElementById('nh-loader');
+let shown=3; const set=p=>{p=Math.max(shown,Math.min(99,Math.round(p)));shown=p;bar.style.width=p+'%';pct.textContent='Loading… '+p+'%';};
+M.onProgress=(u,l,t)=>set(l/t*100);
+const done=()=>{bar.style.width='100%';pct.textContent='100%';el.style.opacity='0';setTimeout(()=>el.remove(),600);};
+const t0=Date.now();(function poll(){const w=window.App&&App.renderer&&App.renderer.world;if((w&&w.groundTraffic&&w.groundTraffic.ready&&w.flyingCars&&w.flyingCars.ready)||Date.now()-t0>60000)return done();setTimeout(poll,250);})();
 </script>
 <script type="module" src="js/countries.js"></script>
 <script type="module" src="js/i18n_game.js"></script>

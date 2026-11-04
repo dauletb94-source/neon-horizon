@@ -4,6 +4,7 @@
 //   * strong neon outline (feature edges) around every tower, like the hero towers in city.jpg
 import * as THREE from '../vendor/three/three.module.js';
 import { GLTFLoader } from '../vendor/three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from '../vendor/three/addons/libs/meshopt_decoder.module.js';
 import { NEON } from './towers.js';
 
 export const REAL_FILES = [
@@ -94,7 +95,7 @@ float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return
 }
 
 export async function loadRealModels() {
-  const loader = new GLTFLoader();
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   await Promise.all(REAL_FILES.map((f, i) => new Promise((res) => {
     loader.load('assets/models/real/' + f.file, (g) => {
       const root = g.scene;

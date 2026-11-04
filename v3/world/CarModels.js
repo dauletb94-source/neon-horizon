@@ -3,6 +3,7 @@
 // `len` metres) and merged per material, so each model costs 1-2 draw calls per InstancedMesh.
 import * as THREE from '../vendor/three/three.module.js';
 import { GLTFLoader } from '../vendor/three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from '../vendor/three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from '../vendor/three/addons/utils/BufferGeometryUtils.js';
 
 export const CAR_DEFS = [
@@ -15,7 +16,7 @@ export function loadCarModel(def, len) {
   const key = def.file + ':' + len;
   if (cache.has(key)) return cache.get(key);
   const p = new Promise((resolve) => {
-    new GLTFLoader().load('assets/models/cars/' + def.file, (gltf) => {
+    new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load('assets/models/cars/' + def.file, (gltf) => {
       gltf.scene.updateMatrixWorld(true);
       // drop ground/floor planes baked into the source file (Quadra ships a 21 m "Boden" plane that otherwise shrinks the car)
       const isFloor = (o) => /boden|floor|ground|plane/i.test((o.material && o.material.name) || '') || /boden|floor|ground/i.test(o.name || '');
