@@ -211,6 +211,10 @@
     ["Skyscraper Tower", "VertaScan", "CC BY 4.0", "https://sketchfab.com/3d-models/skyscraper-tower-8c141fda071f4f6a927f4d7047f48ec7"],
     ["Singapore Office Skyscraper [FREE]", "99.Miles", "CC BY 4.0", "https://sketchfab.com/3d-models/singapore-office-skyscraper-free-2305f0fe03ba44229a1f768dcb48bd8f"],
     ["modern tower office apartment house home", "zigurat architecture studio", "CC BY 4.0", "https://sketchfab.com/3d-models/modern-tower-office-apartment-house-home-a057bf3379b24c23a18a82ec884e4f04"],
+    ["[FREE] London Skyscraper", "99.Miles", "CC BY 4.0", "https://sketchfab.com/3d-models/free-london-skyscraper-52b73f6ea18a440cb42734840d5edc72"],
+    ["[FREE] Atlanta, Corperate Office Building", "99.Miles", "CC BY 4.0", "https://sketchfab.com/3d-models/free-atlanta-corperate-office-building-d96380fb001345cca9a9be121f3e43d5"],
+    ["ALPHA TOWER", "Portal.Studio", "CC BY 4.0", "https://sketchfab.com/3d-models/alpha-tower-4419eca89c2a43bd9a9f7d662f6b6918"],
+    ["MetLife Building", "NanoRay", "CC BY 4.0", "https://sketchfab.com/3d-models/metlife-building-32d3a4a1810a4d64abb9547bb661f7f3"],
     ["Futuristic racing car \"Molnia\" (flying car)", "TuppsM", "CC BY 4.0", "https://sketchfab.com/3d-models/futuristic-racing-car-molnia-738a78a4c9154614b90029bf8bb80d61"],
     ["Cyberpunk 2077 - Quadra V-Tech (flying car)", "Kreanym", "CC BY 4.0", "https://sketchfab.com/3d-models/cyberpunk-2077-quadra-v-tech-6c8bc8c16f2c4e739b2f182e9d060873"],
   ];

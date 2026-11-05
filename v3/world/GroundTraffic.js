@@ -66,7 +66,7 @@ export class GroundTraffic {
       const mi = p.mi % models.length, M = this.models[mi];
       const car = Object.assign(p, { id, mi, M, slot: M.used++, nose: M.M.def.nose ?? 1 });
       this.cars.push(car);
-      col.setHex(GLOWS[(rnd() * GLOWS.length) | 0]); this.glowMesh.setColorAt(id, col.multiplyScalar(1.8));
+      col.setHex(GLOWS[(rnd() * GLOWS.length) | 0]); this.glowMesh.setColorAt(id, col.multiplyScalar(1.0));
       this.beamMesh.setColorAt(id, col.setHex(0xfff1cf).multiplyScalar(0.3));
       for (let q = 0; q < 4; q++) this.lightMesh.setColorAt(id * 4 + q, col.setHex(q < 2 ? 0xfff6dd : 0xff1c2c).multiplyScalar(q < 2 ? 6 : 4));
     });

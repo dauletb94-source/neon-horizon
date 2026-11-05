@@ -4,112 +4,112 @@
   "kind": 0,
   "heightClass": 0,
   "height": 16,
-  "tris": 440
+  "tris": 500
  },
  {
   "file": "tower_0_1.glb",
   "kind": 0,
   "heightClass": 1,
   "height": 30,
-  "tris": 440
+  "tris": 500
  },
  {
   "file": "tower_0_2.glb",
   "kind": 0,
   "heightClass": 2,
   "height": 50,
-  "tris": 440
+  "tris": 500
  },
  {
   "file": "tower_0_3.glb",
   "kind": 0,
   "heightClass": 3,
   "height": 78,
-  "tris": 440
+  "tris": 500
  },
  {
   "file": "tower_1_0.glb",
   "kind": 1,
   "heightClass": 0,
   "height": 16,
-  "tris": 130
+  "tris": 290
  },
  {
   "file": "tower_1_1.glb",
   "kind": 1,
   "heightClass": 1,
   "height": 30,
-  "tris": 130
+  "tris": 290
  },
  {
   "file": "tower_1_2.glb",
   "kind": 1,
   "heightClass": 2,
   "height": 50,
-  "tris": 130
+  "tris": 290
  },
  {
   "file": "tower_1_3.glb",
   "kind": 1,
   "heightClass": 3,
   "height": 78,
-  "tris": 130
+  "tris": 310
  },
  {
   "file": "tower_2_0.glb",
   "kind": 2,
   "heightClass": 0,
   "height": 16,
-  "tris": 410
+  "tris": 330
  },
  {
   "file": "tower_2_1.glb",
   "kind": 2,
   "heightClass": 1,
   "height": 30,
-  "tris": 410
+  "tris": 330
  },
  {
   "file": "tower_2_2.glb",
   "kind": 2,
   "heightClass": 2,
   "height": 50,
-  "tris": 410
+  "tris": 330
  },
  {
   "file": "tower_2_3.glb",
   "kind": 2,
   "heightClass": 3,
   "height": 78,
-  "tris": 410
+  "tris": 330
  },
  {
   "file": "tower_3_0.glb",
   "kind": 3,
   "heightClass": 0,
   "height": 16,
-  "tris": 574
+  "tris": 494
  },
  {
   "file": "tower_3_1.glb",
   "kind": 3,
   "heightClass": 1,
   "height": 30,
-  "tris": 574
+  "tris": 494
  },
  {
   "file": "tower_3_2.glb",
   "kind": 3,
   "heightClass": 2,
   "height": 50,
-  "tris": 574
+  "tris": 494
  },
  {
   "file": "tower_3_3.glb",
   "kind": 3,
   "heightClass": 3,
   "height": 78,
-  "tris": 574
+  "tris": 494
  },
  {
   "file": "tower_4_0.glb",
@@ -144,112 +144,112 @@
   "kind": 5,
   "heightClass": 0,
   "height": 16,
-  "tris": 290
+  "tris": 490
  },
  {
   "file": "tower_5_1.glb",
   "kind": 5,
   "heightClass": 1,
   "height": 30,
-  "tris": 290
+  "tris": 490
  },
  {
   "file": "tower_5_2.glb",
   "kind": 5,
   "heightClass": 2,
   "height": 50,
-  "tris": 290
+  "tris": 490
  },
  {
   "file": "tower_5_3.glb",
   "kind": 5,
   "heightClass": 3,
   "height": 78,
-  "tris": 290
+  "tris": 490
  },
  {
   "file": "tower_6_0.glb",
   "kind": 6,
   "heightClass": 0,
   "height": 16,
-  "tris": 230
+  "tris": 190
  },
  {
   "file": "tower_6_1.glb",
   "kind": 6,
   "heightClass": 1,
   "height": 30,
-  "tris": 230
+  "tris": 190
  },
  {
   "file": "tower_6_2.glb",
   "kind": 6,
   "heightClass": 2,
   "height": 50,
-  "tris": 230
+  "tris": 190
  },
  {
   "file": "tower_6_3.glb",
   "kind": 6,
   "heightClass": 3,
   "height": 78,
-  "tris": 230
+  "tris": 190
  },
  {
   "file": "tower_7_0.glb",
   "kind": 7,
   "heightClass": 0,
   "height": 16,
-  "tris": 422
+  "tris": 382
  },
  {
   "file": "tower_7_1.glb",
   "kind": 7,
   "heightClass": 1,
   "height": 30,
-  "tris": 422
+  "tris": 382
  },
  {
   "file": "tower_7_2.glb",
   "kind": 7,
   "heightClass": 2,
   "height": 50,
-  "tris": 442
+  "tris": 402
  },
  {
   "file": "tower_7_3.glb",
   "kind": 7,
   "heightClass": 3,
   "height": 78,
-  "tris": 442
+  "tris": 402
  },
  {
   "file": "tower_8_0.glb",
   "kind": 8,
   "heightClass": 0,
   "height": 16,
-  "tris": 1310
+  "tris": 644
  },
  {
   "file": "tower_8_1.glb",
   "kind": 8,
   "heightClass": 1,
   "height": 30,
-  "tris": 1310
+  "tris": 644
  },
  {
   "file": "tower_8_2.glb",
   "kind": 8,
   "heightClass": 2,
   "height": 50,
-  "tris": 1310
+  "tris": 644
  },
  {
   "file": "tower_8_3.glb",
   "kind": 8,
   "heightClass": 3,
   "height": 78,
-  "tris": 1310
+  "tris": 644
  },
  {
   "file": "tower_9_0.glb",
@@ -284,55 +284,55 @@
   "kind": 10,
   "heightClass": 0,
   "height": 16,
-  "tris": 980
+  "tris": 780
  },
  {
   "file": "tower_10_1.glb",
   "kind": 10,
   "heightClass": 1,
   "height": 30,
-  "tris": 980
+  "tris": 780
  },
  {
   "file": "tower_10_2.glb",
   "kind": 10,
   "heightClass": 2,
   "height": 50,
-  "tris": 980
+  "tris": 780
  },
  {
   "file": "tower_10_3.glb",
   "kind": 10,
   "heightClass": 3,
   "height": 78,
-  "tris": 980
+  "tris": 780
  },
  {
   "file": "tower_11_0.glb",
   "kind": 11,
   "heightClass": 0,
   "height": 28.0,
-  "tris": 392
+  "tris": 312
  },
  {
   "file": "tower_11_1.glb",
   "kind": 11,
   "heightClass": 1,
   "height": 52.5,
-  "tris": 392
+  "tris": 312
  },
  {
   "file": "tower_11_2.glb",
   "kind": 11,
   "heightClass": 2,
   "height": 87.5,
-  "tris": 392
+  "tris": 312
  },
  {
   "file": "tower_11_3.glb",
   "kind": 11,
   "heightClass": 3,
   "height": 136.5,
-  "tris": 392
+  "tris": 312
  }
 ]

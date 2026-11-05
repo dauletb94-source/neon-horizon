@@ -82,7 +82,7 @@ export function setupSky(renderer, scene) {
   // navy haze (matching the horizon glow + distant skyline) instead of
   // vanishing into the void; density eased slightly so the skyline backdrop
   // still reads through it.
-  scene.fog = new THREE.FogExp2(0x050a1c, 0.00105);
+  scene.fog = new THREE.FogExp2(0x081a44, 0.00085); // glowing blue city haze: far towers dissolve into it, no dark band at the horizon
 
   pmrem.dispose();
   return { skyTex };
@@ -101,18 +101,19 @@ export function addSkyDome(scene) {
       float h3(vec3 p){ p=fract(p*0.3183099+.1); p*=17.; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
       void main(){
         float y = vD.y;
-        vec3 zen = vec3(0.0005,0.001,0.004), mid = vec3(0.003,0.007,0.03), hor = uFog, glow = vec3(0.30,0.10,0.36);
-        float t = clamp(y,0.,1.);
-        vec3 c = mix(hor, mid, smoothstep(0.0,0.12,t));
-        c = mix(c, zen, smoothstep(0.10,0.5,t));
-        c += glow * exp(-abs(y-0.05)*22.) * 0.10;                 // magenta bounce right at the skyline
-        c += vec3(0.02,0.12,0.35) * exp(-abs(y-0.08)*20.) * 0.16; // cyan haze band
-        c = y < 0. ? hor : c;
+        vec3 zen = vec3(0.0005,0.001,0.004), mid = vec3(0.004,0.010,0.04), hor = uFog;
+        float t = max(y, 0.);
+        // continuous from below the horizon (pure fog colour, so the far ground/towers meet it seamlessly) up to the zenith
+        vec3 c = mix(hor, mid, smoothstep(0.0,0.22,t));
+        c = mix(c, zen, smoothstep(0.12,0.55,t));
+        // luminous haze: cyan-blue glow rising from the skyline, soft magenta bounce above it
+        c += vec3(0.03,0.16,0.50) * smoothstep(0.0,0.09,t) * exp(-t*9.0) * 0.8;
+        c += vec3(0.22,0.07,0.30) * exp(-abs(t-0.07)*14.) * 0.12;
         // stars (fade toward the horizon)
         vec3 p = vD*420.; vec3 ip = floor(p); float r = h3(ip);
-        float star = step(0.991, r) * smoothstep(0.03,0.25,y);
-        vec3 f = fract(p)-0.5; star *= smoothstep(0.5,0.0,length(f))*(0.5+0.5*h3(ip+7.));
-        c += mix(vec3(0.7,0.85,1.),vec3(1.,0.9,0.8),h3(ip+3.))*star*2.2;
+        float star = step(0.975, r) * smoothstep(0.02,0.18,y);
+        vec3 f = fract(p)-0.5; star *= smoothstep(0.62,0.0,length(f))*(0.5+0.5*h3(ip+7.));
+        c += mix(vec3(0.7,0.85,1.),vec3(1.,0.9,0.8),h3(ip+3.))*star*4.5;
         gl_FragColor = vec4(c,1.);
       }`,
   });

@@ -11,6 +11,11 @@ No skyscraper on Sketchfab is both downloadable and CC0 (the CC0 filter only ret
 - **Skyscraper Tower** by VertaScan — https://sketchfab.com/3d-models/skyscraper-tower-8c141fda071f4f6a927f4d7047f48ec7 (CC BY 4.0)
 - **Singapore Office Skyscraper [FREE]** by 99.Miles — https://sketchfab.com/3d-models/singapore-office-skyscraper-free-2305f0fe03ba44229a1f768dcb48bd8f (CC BY 4.0)
 - **modern tower office apartment house home** by zigurat architecture studio — https://sketchfab.com/3d-models/modern-tower-office-apartment-house-home-a057bf3379b24c23a18a82ec884e4f04 (CC BY 4.0)
+- **[FREE] London Skyscraper** by 99.Miles — https://sketchfab.com/3d-models/free-london-skyscraper-52b73f6ea18a440cb42734840d5edc72 (CC BY 4.0)
+- **[FREE] Atlanta, Corperate Office Building** by 99.Miles — https://sketchfab.com/3d-models/free-atlanta-corperate-office-building-d96380fb001345cca9a9be121f3e43d5 (CC BY 4.0)
+- **ALPHA TOWER** by Portal.Studio — https://sketchfab.com/3d-models/alpha-tower-4419eca89c2a43bd9a9f7d662f6b6918 (CC BY 4.0)
+- **MetLife Building** by NanoRay — https://sketchfab.com/3d-models/metlife-building-32d3a4a1810a4d64abb9547bb661f7f3 (CC BY 4.0)
+  (Nov 5 pass: the four above were decimated/texture-resized with gltf-transform and re-graded for night at load. A CC0 filter search on Sketchfab and Poly Haven again returned no downloadable skyscraper, so CC-BY with credit is used.)
 
 ## Flying cars (Sketchfab, CC Attribution 4.0 — attribution required)
 `assets/models/cars/*.glb`, used by flying cars (`world/FlyingCars.js`) and ground traffic (`world/GroundTraffic.js`) via `world/CarModels.js` (geometry/textures unmodified; scaled and re-oriented at load, Quadra's baked ground plane removed). The metro (`world/Metro.js`) is self-authored geometry.

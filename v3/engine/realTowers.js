@@ -11,6 +11,10 @@ export const REAL_FILES = [
   { file: 'singapore_office.glb', name: 'office', edge: 38 },
   { file: 'skyscraper_tower.glb', name: 'tower', edge: 38 },
   { file: 'modern_tower_terraces.glb', name: 'terraces', edge: 38 },
+  { file: 'london_skyscraper.glb', name: 'london', edge: 38 },
+  { file: 'atlanta_office.glb', name: 'atlanta', edge: 38 },
+  { file: 'alpha_tower.glb', name: 'alpha', edge: 38 },
+  { file: 'metlife_building.glb', name: 'metlife', edge: 38 },
 ];
 export const REAL_COUNT = REAL_FILES.length;
 
@@ -33,7 +37,7 @@ export function thickEdgeGeometry(pts, w = 0.4) {
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setIndex(new THREE.BufferAttribute(idx, 1));
   return g;
 }
-export const glowEdgeMaterial = (hex, k = 1.5) => new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), toneMapped: false, side: THREE.DoubleSide, fog: false });
+export const glowEdgeMaterial = (hex, k = 1.1) => new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), toneMapped: false, side: THREE.DoubleSide, fog: false });
 const models = [];
 export const realModels = models;
 
@@ -43,8 +47,8 @@ export function nightMaterial(src, tint, unit = 1) {
   if (nightCache.has(key)) return nightCache.get(key);
   const m = new THREE.MeshStandardMaterial({
     map: src.map || null, normalMap: src.normalMap || null,
-    color: new THREE.Color(0x24324f),
-    metalness: 0.55, roughness: 0.28, envMapIntensity: 1.5,
+    color: new THREE.Color(0x3d5688),
+    metalness: 0.72, roughness: 0.16, envMapIntensity: 2.6,
     side: src.side === THREE.DoubleSide ? THREE.DoubleSide : THREE.FrontSide,
     transparent: false,
   });
@@ -69,7 +73,7 @@ float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return
   vec2 cell = floor(g), fc = fract(g);
   float r = h21(cell);
   float floorBias = h21(vec2(cell.y, 7.0));
-  float on = step(0.80 - 0.25 * step(0.55, floorBias), r);
+  float on = step(0.58 - 0.22 * step(0.5, floorBias), r);
   vec2 fw2 = fwidth(g) * 1.5;
   // anti-aliased pane with soft edges; fades out as cells shrink below a pixel (no moire / blocky pixels at range)
   float px = max(fw2.x, fw2.y);
@@ -86,8 +90,14 @@ float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return
   float pane = 1.0 - smoothstep(0.35, 0.75, lum);          // windows are the darker parts of the source texture
   vec3 warm = mix(uLit, vec3(0.62,0.82,1.0), step(0.5, h21(cell.yx)));
   float glassSheen = wall * paneM * 0.05 * (1.0 - smoothstep(0.35, 1.0, px));           // unlit panes still read as glass
-  vec3 sheen = vec3(0.10,0.22,0.5) * glassSheen;
-  totalEmissiveRadiance = warm * on * inCell * wall * mix(0.35, 1.0, pane) * bright * vgrad * 0.95 + sheen;
+  vec3 sheen = vec3(0.10,0.22,0.5) * glassSheen * 2.0;
+  // glowing atrium / sky-lobby glass bands (blue-violet or magenta wash with floor lines), walls only
+  float bandId = floor(vLocal.y / (uUnit * 7.5));
+  float atr = step(0.84, h21(vec2(bandId, 3.1))) * wall;
+  float flr = smoothstep(0.0, 0.12, abs(fract(vLocal.y / (uUnit * 1.7)) - 0.5) * 2.0 + 0.0);
+  vec3 atrC = mix(vec3(0.25,0.45,1.0), vec3(0.85,0.3,1.0), step(0.75, h21(vec2(bandId, 9.9))));
+  sheen += atrC * atr * (0.55 + 0.25 * flr) * (1.0 - smoothstep(0.35, 1.0, px) * 0.5);
+  totalEmissiveRadiance = warm * on * inCell * wall * mix(0.35, 1.0, pane) * bright * vgrad * 1.7 * (1.0 - atr * 0.8) + sheen;
 }`);
   };
   nightCache.set(key, m);
@@ -161,7 +171,7 @@ export function instantiateReal(idx, H, { maxFoot = 13, neon = 'cyan', tint = 0x
   if (outline) {
     const lm = glowEdgeMaterial(NEON[neon] ?? neon);
     // strip width is in model units; the group is scaled by sxz afterwards, so divide to get ~0.45 m on screen
-    for (const e of m.edges) { const ls = new THREE.Mesh(thickEdgeGeometry(e.attributes.position.array, 0.5 / Math.max(sxz, 0.01)), lm); ls.userData.slot = 'neon'; g.add(ls); }
+    for (const e of m.edges) { const ls = new THREE.Mesh(thickEdgeGeometry(e.attributes.position.array, 0.26 / Math.max(sxz, 0.01)), lm); ls.userData.slot = 'neon'; g.add(ls); }
   }
   g.scale.set(sxz, sy, sxz);
   g.userData.height = m.height * sy;

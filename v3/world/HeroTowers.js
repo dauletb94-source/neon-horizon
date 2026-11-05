@@ -5,7 +5,7 @@
 // roads remain clear by construction (verified by tools/audit_layout.py).
 import * as THREE from '../vendor/three/three.module.js';
 import { PLOTS, NEAR_BLOCKS, CELL } from './layout.js';
-import { heroGlassMaterial, materialFor, NEON } from '../engine/towers.js';
+import { heroGlassMaterial, materialFor, glowGlassMaterial, NEON } from '../engine/towers.js';
 import { thickEdgeGeometry, glowEdgeMaterial } from '../engine/realTowers.js';
 
 const U_TILE = 28.8, V_TILE = 57.6;
@@ -32,6 +32,7 @@ const rotP = (pts, a) => { const c = Math.cos(a), s = Math.sin(a); return pts.ma
 const shiftP = (pts, dx, dz) => pts.map(([x, z]) => [x + dx, z + dz]);
 
 // ---------- loft: rings = [{y, pts}] (same point count). smooth=true shares vertices (curved glass), else flat facets.
+const shiftG = (g, x, z) => { if (g) g.translate(x, 0, z); return g; };
 function loft(rings, { smooth = false, cap = true, flatY = null } = {}) {
   const P = rings[0].pts.length, pos = [], uv = [], idx = [];
   const arc = rings.map((r) => { const a = [0]; for (let i = 0; i < P; i++) { const p = r.pts[i], q = r.pts[(i + 1) % P]; a.push(a[i] + Math.hypot(q[0] - p[0], q[1] - p[1])); } return a; });
@@ -107,7 +108,8 @@ export class HeroTowers {
       const cx = ps.reduce((s, p) => s + p.cx, 0) / ps.length, cz = ps.reduce((s, p) => s + p.cz, 0) / ps.length;
       const fp = r.n * CELL - 2.8;
       const H = r.n === 3 ? 170 + rnd() * 80 : r.n === 2 ? 125 + rnd() * 70 : 85 + rnd() * 60;
-      const type = ['setback', 'curved', 'slant', 'twist', 'twin', 'needle'][(k + ((rnd() * 3) | 0)) % 6];
+      const TYPES = ['cylinder', 'curved', 'setback', 'cylinder', 'slant', 'curved', 'twist', 'cylinder', 'twin', 'needle'];
+      const type = TYPES[(k + ((rnd() * 3) | 0)) % TYPES.length];
       const neon = ['cyan', 'magenta', 'blue', 'violet', 'cyan', 'magenta'][(rnd() * 6) | 0];
       const g = this._build(type, fp, H, neon, rnd);
       g.position.set(cx, 0, cz);
@@ -118,19 +120,28 @@ export class HeroTowers {
   }
 
   _mesh(g, mat, grp) { if (!g) return; const m = new THREE.Mesh(g, mat); m.userData.noPick = true; grp.add(m); return m; }
-  _neon(pts, w, neon, grp, k = 2.4) { if (!pts.length) return; const m = new THREE.Mesh(thickEdgeGeometry(new Float32Array(pts), w), glowEdgeMaterial(NEON[neon], k)); m.userData.noPick = true; grp.add(m); }
+  _neon(pts, w, neon, grp, k = 1.5) { if (!pts.length) return; const m = new THREE.Mesh(thickEdgeGeometry(new Float32Array(pts), w), glowEdgeMaterial(NEON[neon], k)); m.userData.noPick = true; grp.add(m); }
 
   _build(type, fp, H, neon, rnd) {
     const grp = new THREE.Group(), skin = (rnd() * 3) | 0, glass = heroGlassMaterial(skin), roof = materialFor('roof');
     const accent = { cyan: 'magenta', magenta: 'cyan', blue: 'cyan', violet: 'cyan' }[neon];
     const nl = [], na = [];                       // neon segments (main colour / accent colour)
     const bright = materialFor('glow', { neon });
+    // flat dark roof furniture: lit rectangular garden patch with lamps + small plant boxes (no rings, no neon outlines on roofs)
+    const roofDeco = (w, d, y, ox = 0, oz = 0) => {
+      const gw = Math.max(1.4, w * 0.5), gd = Math.max(1.4, d * 0.34);
+      const g = prism(rectP(gw, gd), y, y + 0.28); this._mesh(shiftG(g.wall, ox - w * 0.1, oz + d * 0.22), materialFor('trim'), grp); this._mesh(shiftG(g.roof, ox - w * 0.1, oz + d * 0.22), materialFor('garden'), grp);
+      const lamps = []; for (let k = 0; k < 4; k++) { const lx = ox - w * 0.1 - gw / 2 + (k + 0.5) * gw / 4, lz = oz + d * 0.22; lamps.push(lx - 0.25, y + 0.4, lz, lx + 0.25, y + 0.4, lz); }
+      this._neon(lamps, 0.35, 'amber', grp, 1.6);
+      const eq = prism(rectP(Math.max(1, w * 0.16), Math.max(1, d * 0.14)), y, y + 1.3); eq.wall.translate(ox + w * 0.22, 0, oz - d * 0.2); eq.roof.translate(ox + w * 0.22, 0, oz - d * 0.2);
+      this._mesh(eq.wall, materialFor('trim'), grp); this._mesh(eq.roof, materialFor('trim'), grp);
+    };
     // podium for wide claims: lit glass base with neon parapet; the shaft stands on it
     let base = 0, tw = fp;
     if (fp > 20) {
       const ph = 9 + rnd() * 5, pp = rectP(fp, fp, 2.2);
       const p = prism(pp, 0, ph); this._mesh(p.wall, glass, grp); this._mesh(p.roof, roof, grp);
-      outline(pp, ph + 0.15, nl); corners(pp, 0, ph, na, 2);
+      corners(pp, 0, ph, na, 2);
       base = ph; tw = fp * 0.64;
       const gar = prism(rectP(fp * 0.9, fp * 0.9), ph + 0.1, ph + 0.35); // planted podium roof ring around the shaft
       this._mesh(gar.roof, materialFor('garden'), grp);
@@ -145,8 +156,8 @@ export class HeroTowers {
       const tiers = [[1, 0.52], [0.78, 0.22], [0.58, 0.14], [0.38, 0.07]]; let y = base;
       tiers.forEach(([s, f], i) => {
         const pp = rectP(tw * s, tw * s * (0.9 + (i % 2) * 0.1), 0.8 * s), y1 = y + hh * f;
-        const p = prism(pp, y, y1); this._mesh(p.wall, glass, grp); this._mesh(p.roof, roof, grp);
-        outline(pp, y1 + 0.15, i % 2 ? na : nl); if (i < 2) corners(pp, y, y1, nl, 2);
+        const p = prism(pp, y, y1); this._mesh(p.wall, i === 1 ? glowGlassMaterial(neon === 'magenta' ? 'magenta' : 'blue') : glass, grp); this._mesh(p.roof, roof, grp);
+        if (i < 2) corners(pp, y, y1, nl, 2); if (i === 2 || i === 3) roofDeco(tw * s, tw * s, y1);
         y = y1;
       });
       spire(y, hh * 0.1 + 6, 0.9);
@@ -157,17 +168,28 @@ export class HeroTowers {
       const sTop = top, cp = scaleP(pf, sTop);
       // lit crown: bright glowing glass section (like the blue cylinder in city.jpg)
       const crown = loft([{ y: base + hh * 0.78, pts: cp }, { y: H, pts: scaleP(pf, sTop * 0.96) }], { smooth: true });
-      this._mesh(crown.wall, bright, grp); this._mesh(crown.roof, roof, grp);
-      outline(cp, base + hh * 0.78, nl); outline(scaleP(pf, sTop * 0.96), H + 0.1, nl);
-      for (let k = 1; k < 4; k++) outline(scaleP(pf, 1 - (1 - top) * (k / 4) * 0.78 * 1.2), base + hh * 0.78 * 0.25 * k, na);
-      corners(cp, base, base + hh * 0.78, nl, 14).length; void rg;
+      this._mesh(crown.wall, glowGlassMaterial(neon === 'magenta' ? 'magenta' : 'blue'), grp); this._mesh(crown.roof, roof, grp); roofDeco(tw * 0.6, tw * 0.5, H);
+            corners(cp, base, base + hh * 0.78, nl, 14).length; void rg;
       const sp = rectP(tw * 0.22, tw * 0.22); const hp = prism(sp, H, H + 0.8); this._mesh(hp.wall, materialFor('trim'), grp); this._mesh(hp.roof, materialFor('lamp'), grp);
+    } else if (type === 'cylinder') { // true curved-glass cylinder: ringed shaft, big glowing glass section, planted crown
+      const pf = superP(tw, tw, 2, 44), N = 12, rings = [], yTop = base + hh * 0.93, tone = neon === 'magenta' ? 'magenta' : neon === 'cyan' ? 'cyan' : 'blue';
+      const gA = 0.34 + rnd() * 0.12, gB = gA + 0.26 + rnd() * 0.1;          // glowing section: fraction of the shaft
+      const prof = (t) => 1 - 0.07 * t;
+      for (let i = 0; i <= N; i++) { const t = i / N; rings.push({ y: base + (yTop - base) * t, pts: scaleP(pf, prof(t)) }); }
+      const l = loft(rings, { smooth: true, cap: false }); this._mesh(l.wall, glass, grp);
+      const gy0 = base + (yTop - base) * gA, gy1 = base + (yTop - base) * gB;
+      const gl = loft([{ y: gy0, pts: scaleP(pf, prof(gA) * 1.025) }, { y: gy1, pts: scaleP(pf, prof(gB) * 1.025) }], { smooth: true, cap: false });
+      this._mesh(gl.wall, glowGlassMaterial(tone), grp);
+      corners(scaleP(pf, 1), base, yTop, nl, 8);   // thin vertical edge glow only: no circular rings
+      const tp = scaleP(pf, prof(1) * 0.86), terr = loft([{ y: yTop, pts: scaleP(pf, prof(1)) }, { y: yTop + 0.8, pts: scaleP(pf, prof(1)) }]);   // terrace slab
+      this._mesh(terr.wall, materialFor('trim'), grp); this._mesh(terr.roof, roof, grp);
+      const up = loft([{ y: yTop + 0.8, pts: tp }, { y: H, pts: tp }]); this._mesh(up.wall, glass, grp); this._mesh(up.roof, roof, grp); roofDeco(tw * 0.7, tw * 0.7, H);
+      spire(H, hh * 0.08, 0.7);
     } else if (type === 'slant') {
       const pp = rectP(tw, tw * 0.8, 1.2), zs = pp.map((p) => p[1]);
       const ys = pp.map((p) => H - hh * 0.22 * (0.5 - p[1] / (tw * 0.8)));      // roof falls towards -z
       const r0 = { y: base, pts: pp }, r1 = { y: H, pts: pp, ys };
       const l = loft([r0, r1]); this._mesh(l.wall, glass, grp); this._mesh(l.roof, roof, grp);
-      for (let i = 0; i < pp.length; i++) { const q = pp[(i + 1) % pp.length]; nl.push(pp[i][0], ys[i] + 0.15, pp[i][1], q[0], ys[(i + 1) % pp.length] + 0.15, q[1]); }
       corners(pp, base, H, nl, 1).length;
       // glowing vertical fin on the tall face
       const fin = prism(rectP(tw * 0.14, 0.7), base + 2, H - hh * 0.05); fin.wall.translate(0, 0, zs[1] + 0.35); this._mesh(fin.wall, bright, grp);
@@ -177,30 +199,28 @@ export class HeroTowers {
       for (let i = 0; i <= N; i++) { const t = i / N; rings.push({ y: base + hh * t, pts: rotP(scaleP(pp, 1 - 0.3 * t * t), turn * t) }); }
       const l = loft(rings); this._mesh(l.wall, glass, grp); this._mesh(l.roof, roof, grp);
       for (let c = 0; c < pp.length; c += 2) for (let i = 0; i < N; i += 1) { const a = rings[i], b = rings[i + 1]; nl.push(a.pts[c][0], a.y, a.pts[c][1], b.pts[c][0], b.y, b.pts[c][1]); }
-      outline(rings[N].pts, H + 0.15, na);
+      roofDeco(tw * 0.6, tw * 0.6, H);
       spire(H, hh * 0.12, 0.8);
     } else if (type === 'twin') {
       const w = tw * 0.42, d = tw * 0.62;
       [[-1, 1, 1], [1, 0.72, 0.8]].forEach(([sg, hf, wf], i) => {
         const pp = shiftP(rectP(w * wf, d, 1.0), sg * tw * 0.27, 0), top = base + hh * hf;
         const p = prism(pp, base, top); this._mesh(p.wall, glass, grp); this._mesh(p.roof, roof, grp);
-        outline(pp, top + 0.15, i ? na : nl); corners(pp, base, top, nl, 1);
+        corners(pp, base, top, nl, 1);
         const cr = prism(shiftP(rectP(w * wf * 0.6, d * 0.6), sg * tw * 0.27, 0), top, top + hh * 0.07); this._mesh(cr.wall, bright, grp); this._mesh(cr.roof, roof, grp);
         this._neon([sg * tw * 0.27, top + hh * 0.07, 0, sg * tw * 0.27, top + hh * 0.07 + hh * 0.1, 0], 0.7, i ? 'magenta' : neon, grp, 3.4);
       });
       const by = base + hh * 0.58, br = prism(rectP(tw * 0.2, d * 0.5), by, by + hh * 0.07); this._mesh(br.wall, bright, grp); this._mesh(br.roof, roof, grp);
-      outline(rectP(tw * 0.2, d * 0.5), by + hh * 0.07 + 0.15, na);
     } else { // needle: octagonal shaft tapering in two soft stages, tall spire with glowing rings
       const pp = rectP(tw * 0.9, tw * 0.9, tw * 0.22), N = 12, rings = [];
       for (let i = 0; i <= N; i++) { const t = i / N; rings.push({ y: base + hh * 0.86 * t, pts: scaleP(pp, 1 - 0.38 * t - (t > 0.55 ? 0.1 * (t - 0.55) : 0)) }); }
       const l = loft(rings); this._mesh(l.wall, glass, grp); this._mesh(l.roof, roof, grp);
-      const top = rings[N].pts; outline(top, base + hh * 0.86 + 0.15, nl); corners(top, base + hh * 0.86 - 4, base + hh * 0.86, na, 1);
+      const top = rings[N].pts; corners(top, base + hh * 0.86 - 4, base + hh * 0.86, na, 1);
       for (let i = 0; i < N; i++) { const a = rings[i], b = rings[i + 1]; for (let c = 0; c < pp.length; c += 2) nl.push(a.pts[c][0], a.y, a.pts[c][1], b.pts[c][0], b.y, b.pts[c][1]); }
       const y0 = base + hh * 0.86;
       spire(y0, H + hh * 0.12 - y0, 0.9);
-      for (let k = 1; k <= 3; k++) outline(rectP(2.4 - k * 0.5, 2.4 - k * 0.5), y0 + (H - y0) * 0.3 * k, na);
     }
-    this._neon(nl, 0.7, neon, grp); this._neon(na, 0.6, accent, grp, 2.2);
+    this._neon(nl, 0.34, neon, grp); this._neon(na, 0.28, accent, grp, 1.3);
     return grp;
   }
 }

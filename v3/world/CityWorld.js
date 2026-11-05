@@ -7,9 +7,11 @@ import { Building, defaultSpecForSlot } from '../entities/Building.js';
 import { buildGround } from './ground.js';
 import { FillerField } from './FillerField.js';
 import { HeroTowers } from './HeroTowers.js';
+import { GroundLights } from './GroundLights.js';
 import { FlyingCars } from './FlyingCars.js';
 import { GroundTraffic } from './GroundTraffic.js';
 import { Metro } from './Metro.js';
+import { FarSkyline } from './FarSkyline.js';
 import { SkyBridges } from './SkyBridges.js';
 import { LockedDistricts } from './LockedDistricts.js';
 
@@ -48,10 +50,14 @@ export class CityWorld {
     const reserve = (b) => this.metro.blocks(b);
 
     // -------- hero landmark towers: claim whole blocks/plots BEFORE the filler fills the rest --------
-    this.heroes = safe('heroes', () => new HeroTowers(this.group, { count: 12 }));
+    this.heroes = safe('heroes', () => new HeroTowers(this.group, { count: 30 }));
 
     // -------- ambient filler skyline (instanced): fills every remaining plot + the far field --------
     this.filler = safe('filler', () => new FillerField(this.group, { skipChance: 0.08, reserve }));
+
+    this.farSkyline = safe('farSkyline', () => new FarSkyline(this.group));
+
+    this.groundLights = safe('groundLights', () => new GroundLights(this.group));
 
     // -------- sky-bridges between nearby tall named towers --------
     this.skyBridges = safe('skyBridges', () => new SkyBridges(this.group, [...this.buildings.values()], reserve));

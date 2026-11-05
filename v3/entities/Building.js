@@ -183,7 +183,7 @@ export class Building {
     if (on && !this._lockFrame2 && this.tower) {
       const w = this.footprint.w, d = this.footprint.d, h = Math.max(this.topY, 4);
       const f = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w * 1.03, h, d * 1.03)),
-        new THREE.LineBasicMaterial({ color: 0xffa14a, transparent: true, opacity: 0.22, depthWrite: false }));
+        new THREE.LineBasicMaterial({ color: 0xffa14a, transparent: true, opacity: 0.0, depthWrite: false }));
       f.position.y = h / 2; f.userData.noAudit = true;
       this.group.add(f); this._lockFrame2 = f;
     }

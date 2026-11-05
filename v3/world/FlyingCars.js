@@ -108,8 +108,8 @@ export class FlyingCars {
         const tc = trailCols[id % trailCols.length];
         this.cars.push({ M, i, id, loop, path: loop.paths[dir], dir, alt: loop.alts[(id >> 1) % loop.alts.length], s: Math.random() * loop.paths[dir].len, speed: 9 + Math.random() * 14, ph: Math.random() * 6.28, tc });
         col.setHex(tc);
-        this.trailMesh.setColorAt(id, col.clone().multiplyScalar(1.6)); this.trailMesh2.setColorAt(id, col.clone().multiplyScalar(1.6));
-        this.haloMesh.setColorAt(id, col.clone().multiplyScalar(1.3)); this.haloMesh2.setColorAt(id, col.clone().multiplyScalar(1.3));
+        this.trailMesh.setColorAt(id, col.clone().multiplyScalar(0.8)); this.trailMesh2.setColorAt(id, col.clone().multiplyScalar(0.8));
+        this.haloMesh.setColorAt(id, col.clone().multiplyScalar(0.55)); this.haloMesh2.setColorAt(id, col.clone().multiplyScalar(0.55));
         for (let q = 0; q < 4; q++) this.lightMesh.setColorAt(id * 4 + q, col.setHex(q < 2 ? 0xfff2d0 : 0xff2030).multiplyScalar(q < 2 ? 6 : 4));
       }
     });
@@ -139,12 +139,12 @@ export class FlyingCars {
         lp.set(o[0], o[1], o[2]).applyMatrix4(m4); lm.makeTranslation(lp.x, lp.y, lp.z); this.lightMesh.setMatrixAt(c.id * 4 + k, lm);
       });
       // neon trail behind the car (horizontal + vertical ribbon) and halos
-      const tlen = 8 + c.speed * 0.55;
+      const tlen = 3.5 + c.speed * 0.22;
       lp.set(-nz * (L / 2 + tlen / 2), 0.7, 0).applyMatrix4(m4);
       const tq = nz < 0 ? q.clone().multiply(qr.setFromAxisAngle(up, Math.PI)) : q; // gradient runs bright->nose-side
       lm.compose(lp, tq, s1.set(tlen, 1, 1)); this.trailMesh.setMatrixAt(c.id, lm); this.trailMesh2.setMatrixAt(c.id, lm);
-      lp.set(0, 0.8, 0).applyMatrix4(m4); lm.compose(lp, qy, s1.set(L * 2.0, L * 0.55, 1)); this.haloMesh.setMatrixAt(c.id, lm);
-      lm.compose(lp.set(p.x, y + 0.5, p.z), qy, s1.set(L * 1.7, 1, L * 1.0)); this.haloMesh2.setMatrixAt(c.id, lm);
+      lp.set(0, 0.8, 0).applyMatrix4(m4); lm.compose(lp, qy, s1.set(L * 1.3, L * 0.4, 1)); this.haloMesh.setMatrixAt(c.id, lm);
+      lm.compose(lp.set(p.x, y + 0.5, p.z), qy, s1.set(L * 1.2, 1, L * 0.7)); this.haloMesh2.setMatrixAt(c.id, lm);
     }
     for (const M of this.models) for (const im of M.meshes) im.instanceMatrix.needsUpdate = true;
     for (const im of [this.lightMesh, this.trailMesh, this.trailMesh2, this.haloMesh, this.haloMesh2]) { im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; }

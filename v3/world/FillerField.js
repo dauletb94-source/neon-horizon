@@ -11,7 +11,7 @@ import { glassMaterial } from '../engine/towers.js';
 import { SlabBuilder, rectOutline } from './Proc.js';
 
 export const HOME = { x: 42, z: 275 };
-const REAL_CAP = [24, 6, 24]; // max instances per real model (office, tower, terraces, scifi) - triangle budget
+const REAL_CAP = [40, 14, 40, 22, 22, 26, 14]; // max instances per real model (office, tower, terraces, scifi) - triangle budget
 
 function mulberry32(a) {
   return function () {
@@ -21,9 +21,9 @@ function mulberry32(a) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-const NEON_KEYS = ['cyan', 'cyan', 'cyan', 'magenta', 'magenta', 'blue', 'violet', 'cyan'];
+const NEON_KEYS = ['cyan', 'cyan', 'cyan', 'blue', 'blue', 'magenta', 'cyan', 'violet'];
 const CLASS_W = [0.1, 0.3, 0.38, 0.22];
-const NORMAL_KINDS = Array.from({ length: KINDS }, (_, i) => i).filter((i) => !HERO_KINDS.includes(i));
+const NORMAL_KINDS = Array.from({ length: KINDS }, (_, i) => i).filter((i) => !HERO_KINDS.includes(i)).concat([8]); // kind 8 = curved glass cylinder: kept rare (~1 in 12) so silhouettes are not all tubes
 const pickKind = (rnd, heroP) => (rnd() < heroP ? HERO_KINDS[(rnd() * HERO_KINDS.length) | 0] : NORMAL_KINDS[(rnd() * NORMAL_KINDS.length) | 0]);
 function pickClass(r, boost = 0) {
   const x = r + boost; let acc = 0;
@@ -49,9 +49,9 @@ export class FillerField {
       if (p.taken) continue;
       const neon = NEON_KEYS[(rnd() * NEON_KEYS.length) | 0], rot = ((rnd() * 4) | 0) * Math.PI / 2;
       const d = dens(p.cx, p.cz), r0 = rnd();
-      if (r0 < 0.20 + 0.16 * (1 - d)) { p.taken = 'filler'; continue; }                                  // open dark plaza
-      if (r0 < 0.40 + 0.16 * (1 - d)) { this._podium(p, rnd, neon); continue; }                         // garden podium
-      if (realModels.length && rnd() < 0.30) { // downloaded realistic tower on this plot
+      if (r0 < 0.05 + 0.07 * (1 - d)) { p.taken = 'filler'; continue; }                                  // open dark plaza
+      if (r0 < 0.24 + 0.12 * (1 - d)) { this._podium(p, rnd, neon); continue; }                         // garden podium
+      if (realModels.length && rnd() < 0.5) { // downloaded realistic tower on this plot
         const ri = (rnd() * realModels.length) | 0;
         if (realUsed[ri] < (REAL_CAP[ri] ?? 20)) {
           realUsed[ri]++; p.taken = 'filler';
@@ -79,14 +79,7 @@ export class FillerField {
       const taper = 1.25 - 0.55 * k; // lower, hazier silhouettes toward the horizon
       items.push(this._item(fk, hc, p, ((rnd() * 4) | 0) * Math.PI / 2, 0.95 + rnd() * 0.5, (0.55 + rnd() * 0.7) * taper * (hd < 120 ? 0.6 : 1), NEON_KEYS[(rnd() * NEON_KEYS.length) | 0]));
     }
-    // horizon ring: tall silhouettes that swell then taper, so the skyline is real 3D geometry all the way out
-    for (const p of PLOTS.horizon) {
-      if (rnd() < 0.22) continue;
-      const k = (Math.hypot(p.cx, p.cz) - FAR_EXTENT) / (HORIZON_EXTENT - FAR_EXTENT);
-      const fk = pickKind(rnd, 0.03);
-      const hc = HERO_KINDS.includes(fk) ? 3 : pickClass(rnd(), 0.2);
-      items.push(this._item(fk, hc, p, ((rnd() * 4) | 0) * Math.PI / 2, 0.9 + rnd() * 0.4, (0.9 + rnd() * 1.1) * (1.15 - 0.4 * k), NEON_KEYS[(rnd() * NEON_KEYS.length) | 0]));
-    }
+    // horizon: now drawn by world/FarSkyline.js (dense lit shader skyline all the way to the haze)
     this.count = items.length + realItems.length;
     this._build(items);
     this._buildReal(realItems);
@@ -129,7 +122,7 @@ export class FillerField {
           if (it.plot.zone === 'near') (this._refs.get(it.plot.id) || this._refs.set(it.plot.id, []).get(it.plot.id)).push({ im, idx, m: m4.clone() });
           if (slot === 'neon') { col.setHex(NEON[it.neon]); im.setColorAt(idx, col); }
         });
-        if (slot === 'neon') im.material.color.set(0xffffff).multiplyScalar(1.25);
+        if (slot === 'neon') im.material.color.set(0xffffff).multiplyScalar(0.75);
         im.instanceMatrix.needsUpdate = true;
         if (im.instanceColor) im.instanceColor.needsUpdate = true;
         this.group.add(im);
@@ -164,7 +157,7 @@ export class FillerField {
           for (let k = 0; k < a.length; k += 3) { v.set(a[k], a[k + 1], a[k + 2]).applyMatrix4(it.m); pts.push(v.x, v.y, v.z); }
           it.edgeRange = 1;
         }
-        const ls = new THREE.Mesh(thickEdgeGeometry(new Float32Array(pts), 0.5), glowEdgeMaterial(NEON[neon]));
+        const ls = new THREE.Mesh(thickEdgeGeometry(new Float32Array(pts), 0.26), glowEdgeMaterial(NEON[neon], 1.1));
         ls.frustumCulled = false; ls.userData.noAudit = true; this.group.add(ls);
       }
     }
