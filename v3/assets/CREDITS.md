@@ -1,7 +1,7 @@
 # Asset credits & licenses — STRICTLY CC0 / public domain / MIT (pass 12, Nov 5 2026)
 No CC-BY, no Sketchfab, no Kenney/Quaternius. Everything shipped is one of:
 - **modern_buildings_night_1k.hdr** — Poly Haven HDRI, CC0 (https://polyhaven.com/a/modern_buildings_night). Glass reflections only.
-- **Skyscraper library** `assets/models/tower_*.glb` (12 archetypes x 4 heights) — self-authored by `tools/gen_towers.py`, CC0.
+- **Skyscraper library** `assets/models/tower_*.glb` (16 archetypes x 4 heights) — self-authored by `tools/gen_towers.py`, CC0.
 - **Hero towers** (`world/HeroTowers.js`), **far skyline** (`world/FarSkyline.js`), podiums, sky-bridges — self-authored procedural geometry/shaders, CC0.
 - **Cars** (ground traffic + flying cars) — self-authored procedural meshes (`world/CarModels.js`), CC0.
 - **Metro** (`world/Metro.js`) — self-authored, CC0.
