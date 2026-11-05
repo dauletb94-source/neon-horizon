@@ -8,14 +8,14 @@ import { GLTFLoader } from '../vendor/three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from '../vendor/three/addons/libs/meshopt_decoder.module.js';
 import { RGBELoader } from '../vendor/three/addons/loaders/RGBELoader.js';
 
-export const KINDS = 12;
+export const KINDS = 16;
 export const HERO_KINDS = [9, 11];
 export const CLASS_HEIGHTS = [16, 30, 50, 78];
 export const NEON = { cyan: 0x22e6ff, magenta: 0xff2fd0, blue: 0x3d7bff, violet: 0x9b5cff, amber: 0xffb02e, green: 0x38ff9c, gold: 0xffd34d };
 const SKINS = [
-  { mull: '#0b1228', paneTop: '#16305e', paneBot: '#0a1a3a', spandrel: '#04070f', env: 1.9, density: 0.34, lit: ['#ffd9a0', '#ffe9c4', '#9fd8ff', '#7fb4ff'] },   // blue glass, warm + cool rooms
-  { mull: '#111827', paneTop: '#1c3050', paneBot: '#0b1426', spandrel: '#05080f', env: 2.0, density: 0.26, lit: ['#dff2ff', '#a8d6ff', '#ffe3b8', '#8fc0ff'] },   // chrome / pale curtain wall
-  { mull: '#150f2a', paneTop: '#1f1648', paneBot: '#0c0724', spandrel: '#05030c', env: 1.9, density: 0.3, lit: ['#ffd0e8', '#c9b8ff', '#9fe6ff', '#ffe2b0'] },   // smoked violet glass
+  { mull: '#0b1228', paneTop: '#0e2552', paneBot: '#050e26', spandrel: '#04070f', env: 1.9, density: 0.55, lit: ['#ffc27a', '#35c8ff', '#4a8dff', '#2f7bff'] },   // blue glass, warm + cool rooms
+  { mull: '#111827', paneTop: '#0f1e3c', paneBot: '#050a18', spandrel: '#05080f', env: 2.0, density: 0.48, lit: ['#5fd3ff', '#3d9dff', '#ffc888', '#4a7dff'] },   // chrome / pale curtain wall
+  { mull: '#150f2a', paneTop: '#1f1648', paneBot: '#0c0724', spandrel: '#05030c', env: 1.9, density: 0.52, lit: ['#ff7ad0', '#9a7bff', '#4fd6ff', '#ffc080'] },   // smoked violet glass
 ];
 export const FACADE_SKIN = { blueGlass: 0, smokedGlass: 2, chrome: 1, blackSteel: 0, whiteCeramic: 1 };
 
@@ -85,7 +85,7 @@ function litTexture(skinIdx, seed) {
   g.fillStyle = '#000'; g.fillRect(0, 0, c.width, c.height);
   const rnd = mkRng(seed);
   for (let r = 0; r < ROWS; r++) {
-    const occupied = rnd() < 0.5;
+    const occupied = rnd() < 0.62;
     const floorBias = occupied ? skin.density * (0.7 + rnd() * 2.6) : skin.density * 0.1;
     const yy = (ROWS - 1 - r) * CELL;   // canvas y is flipped vs uv.v -> floor 0 at the base
     if (occupied && rnd() < 0.55) {      // whole-floor ambient wash (cool or warm), fading in/out along the floor
@@ -100,7 +100,7 @@ function litTexture(skinIdx, seed) {
     for (let q = 0; q < COLS; q++) {
       if (rnd() > floorBias) continue;
       if (rnd() < 0.25) colr = skin.lit[(rnd() * skin.lit.length) | 0];
-      const a = Math.pow(rnd(), 1.6) * 0.8 + 0.1;         // many dim rooms, a few bright ones
+      const a = Math.pow(rnd(), 0.9) * 0.65 + 0.35;         // many dim rooms, a few bright ones
       g.save(); g.shadowColor = colr; g.shadowBlur = 5 + a * 6;
       g.globalAlpha = a; g.fillStyle = colr;
       g.fillRect(q * CELL + 7, yy + 9, CELL - 14, CELL - 19);
@@ -156,7 +156,7 @@ float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(v
       { float hz = vWV.x + vWV.z;
         float zone = vn(vec2(hz*.045, vWV.y*.06)) * .6 + vn(vec2(hz*.17, vWV.y*.21)) * .4;      // patches of floors, tens of metres across
         float flr = vh(vec2(floor(vWV.y/2.7), floor(hz*.02) + 3.)) ;                              // per-floor-run brightness
-        totalEmissiveRadiance *= mix(.12, 1.9, smoothstep(.25, .8, zone)) * mix(.45, 1.2, flr)
+        totalEmissiveRadiance *= mix(.45, 1.7, smoothstep(.15, .7, zone)) * mix(.45, 1.2, flr)
           + vec3(.02,.05,.13) * smoothstep(.55,.9,zone) * (.4 + flr);
         // fine near-field detail: each window is split by a thin mullion into two sub-panes with their own brightness,
         // plus faint blind slats; all of it fades to the plain average once a sub-pane is smaller than ~a pixel.
@@ -178,7 +178,7 @@ export function glassMaterial(skinIdx) {
   const m = new THREE.MeshStandardMaterial({
     map, roughnessMap: orm, metalnessMap: orm,
     color: 0xffffff, metalness: 1.0, roughness: 1.0, envMapIntensity: skin.env,
-    emissive: new THREE.Color(0xffffff), emissiveMap: litTexture(skinIdx, 4242 + skinIdx * 77), emissiveIntensity: 0.9,
+    emissive: new THREE.Color(0xffffff), emissiveMap: litTexture(skinIdx, 4242 + skinIdx * 77), emissiveIntensity: 0.85,
   });
   varyLighting(m);
   cache.glass.set(skinIdx, m);
@@ -190,7 +190,7 @@ export function heroGlassMaterial(skinIdx = 0) {
   const key = 'hero' + skinIdx;
   if (cache.glass.has(key)) return cache.glass.get(key);
   const m = glassMaterial(skinIdx).clone();
-  m.envMapIntensity = 3.0; m.emissiveIntensity = 2.9; m.roughness = 0.8;
+  m.envMapIntensity = 2.2; m.emissiveIntensity = 1.8; m.roughness = 0.8;
   m.emissiveMap = litTexture(skinIdx, 9100 + skinIdx * 53); // own lit pattern (denser than ambient towers)
   varyLighting(m);
   cache.glass.set(key, m); return m;
@@ -207,7 +207,7 @@ export function neonMaterial(color) {
 
 // planted roof terrace: world-space procedural canopy (dark/light foliage clumps, hedge rows, tiny warm path lamps).
 function gardenMaterial() {
-  const m = new THREE.MeshStandardMaterial({ color: 0x174a26, roughness: 0.95, metalness: 0, emissive: 0x041a0b, emissiveIntensity: 0.7 });
+  const m = new THREE.MeshStandardMaterial({ color: 0x174a26, roughness: 0.95, metalness: 0, emissive: 0x0a4a1c, emissiveIntensity: 1.5 });
   m.onBeforeCompile = (sh) => {
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vGW;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\n vec4 gw4 = vec4(transformed,1.);\n#ifdef USE_INSTANCING\n gw4 = instanceMatrix * gw4;\n#endif\n vGW = (modelMatrix * gw4).xyz;');
@@ -221,7 +221,7 @@ float gn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(g
       diffuseColor.rgb *= mix(.35, 1.5, canopy) * (1. + .3*hedge);
       vec2 lc = floor(gp*.5); float lamp = step(.93, gh(lc)) * smoothstep(.22,.0,length(fract(gp*.5)-.5));`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-      totalEmissiveRadiance *= mix(.5, 1.2, canopy); totalEmissiveRadiance += vec3(1.,.8,.45) * lamp * 2.2;`);
+      totalEmissiveRadiance *= mix(.5, 1.2, canopy); totalEmissiveRadiance += vec3(1.,.8,.45) * lamp * 4.5 + vec3(.15,.9,.4) * hedge * .5;`);
   };
   return m;
 }
@@ -246,7 +246,7 @@ function glowMaterial(neon) {
   const c = new THREE.Color(NEON[neon] ?? neon);
   m.color = c.clone().multiplyScalar(0.18);
   m.emissive = c.clone().multiplyScalar(0.4);
-  m.emissiveMap = litTexture(0, 777 + (typeof neon === 'string' ? neon.length : 3)); m.emissiveIntensity = 0.16; // lit atrium: dense glowing windows, not a flat slab
+  m.emissiveMap = litTexture(0, 777 + (typeof neon === 'string' ? neon.length : 3)); m.emissiveIntensity = 0.3; // lit atrium: dense glowing windows, not a flat slab
   cache.glass.set(key, m); return m;
 }
 

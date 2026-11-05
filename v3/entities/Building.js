@@ -70,7 +70,7 @@ export class Building {
     const seed = spec.seed ?? hash(this.id);
     const totalH = WORLD_HEIGHT_BY_LEVEL[spec.level] || WORLD_HEIGHT_BY_LEVEL[1];
     // glTF tower model (assets/models). Helipad upgrade selects the helipad-crown model.
-    const useReal = realModels.length > 0;
+    const useReal = false; // pass 12: CC0 only, procedural tower library
     const kind = spec.crown === 'helipad' ? 6 : seed % KINDS;
     const tower = useReal
       ? instantiateReal((seed >> 3) % REAL_COUNT, Math.max(totalH, 22), { maxFoot: this.cap, neon: spec.neonColor })

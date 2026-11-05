@@ -18,7 +18,7 @@ export function createRenderPipeline(canvas, scene, camera) {
   renderer.setPixelRatio(Math.min((/iPhone|iPad|Android|Mobi/i.test(navigator.userAgent) ? 1.5 : 2), window.devicePixelRatio || 1));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.62;
+  renderer.toneMappingExposure = 0.5;
   renderer.setClearColor(0x02030a, 1);
 
   const composer = new EffectComposer(renderer);
@@ -34,8 +34,8 @@ export function createRenderPipeline(canvas, scene, camera) {
     vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
     fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
       void main(){ vec4 c=texture2D(tDiffuse,vUv); float l=dot(c.rgb,vec3(.2126,.7152,.0722));
-        vec3 g=mix(vec3(l),c.rgb,.84);
-        g*=mix(vec3(.82,.94,1.18),vec3(1.),smoothstep(.0,.6,l));
+        vec3 g=mix(vec3(l),c.rgb,1.08);
+        g*=mix(vec3(.55,.74,1.2),vec3(1.),smoothstep(.0,.8,l));   // crush shadows to deep navy, keep neon crisp
         gl_FragColor=vec4(g,c.a); }`,
   }));
   const outputPass = new OutputPass();

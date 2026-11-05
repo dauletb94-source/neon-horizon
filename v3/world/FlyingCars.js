@@ -1,4 +1,4 @@
-// Realistic flying cars (CC-BY Sketchfab models, see assets/CREDITS.md) on "sky lanes": closed, rounded-rectangle
+// Procedural (self-authored, CC0) flying cars on "sky lanes": closed, rounded-rectangle
 // circuits that follow the street centre-lines. Streets are building-free by layout; each circuit's altitude is chosen
 // so that no lane sample comes near a sky-bridge box or a metro deck/train/pylon (see Metro.clear). Cars are large
 // enough to read from the hero camera and carry head/tail lights, a coloured halo and a long neon trail.
@@ -8,8 +8,9 @@ import { roadCenter, NEAR_BLOCKS } from './layout.js';
 import { CAR_DEFS, loadCarModel } from './CarModels.js';
 
 const MODELS = [
-  { def: CAR_DEFS[0], len: 7.4, w: 3 },
-  { def: CAR_DEFS[1], len: 9.6, w: 2 },
+  { def: CAR_DEFS[0], len: 7.6, w: 2 },
+  { def: CAR_DEFS[1], len: 8.4, w: 1 },
+  { def: CAR_DEFS[2], len: 9.2, w: 2 },
 ];
 const ALTS = [6, 34, 42, 50, 60, 72, 86];   // metro occupies ~10-31 m; 6 m only on streets without a metro pylon
 const CAR_R = 3.3;                           // clearance radius used against sky-bridges / metro
@@ -95,7 +96,7 @@ export class FlyingCars {
     });
     const total = this.models.reduce((a, q) => a + q.n, 0);
     const add = (mat) => new THREE.MeshBasicMaterial(Object.assign({ toneMapped: false, depthWrite: false, transparent: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }, mat));
-    this.lightMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.5, 0.3, 0.9), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false, fog: false }), total * 4);
+    this.lightMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.16, 0.1, 0.3), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false, fog: false }), total * 4);
     this.trailMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 0.7), add({ map: trailTexture() }), total);
     this.trailMesh2 = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 0.7).rotateX(Math.PI / 2), add({ map: trailTexture() }), total);
     this.haloMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), add({ map: glowTexture() }), total);       // vertical, side-on

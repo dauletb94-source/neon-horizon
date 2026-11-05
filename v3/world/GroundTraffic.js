@@ -1,4 +1,4 @@
-// Ground traffic: hundreds of real 3D cars (same CC-BY models as the flying cars) driving two-way on every street.
+// Ground traffic: hundreds of procedural (self-authored CC0) 3D cars driving two-way on every street.
 // One InstancedMesh per model material; headlights/taillights are HDR instanced boxes (bloom), and every car carries
 // a coloured underglow pool + a forward headlight beam on the asphalt so it reads from the whole-city hero camera.
 // Cars run straight along street centre-lines (building-free by layout) in lanes 2 m either side of the centre.
@@ -28,7 +28,7 @@ function beamTexture() { // bright at the car (u=0), fading out ahead (u=1)
 
 export class GroundTraffic {
   /** @param {number} perLane cars per lane on each street (2 lanes x 2 axes x (K1-K0+1) streets) */
-  constructor(parent, perLane = 12, { carLen = 6.6 } = {}) {
+  constructor(parent, perLane = 12, { carLen = 7.2 } = {}) {
     this.group = new THREE.Group(); this.group.userData.noAudit = true; parent.add(this.group);
     this.perLane = perLane; this.carLen = carLen; this.cars = []; this.ready = false;
     this.lo = roadCenter(K0 - 1); this.hi = roadCenter(K1 + 1); this.span = this.hi - this.lo;
@@ -43,7 +43,7 @@ export class GroundTraffic {
     const plan = [];
     for (let k = K0; k <= K1; k++) for (const axis of [0, 1]) for (const dir of [1, -1]) {
       for (let i = 0; i < this.perLane; i++) {
-        plan.push({ line: roadCenter(k), axis, dir, lane: dir * LANE, s0: ((i + rnd() * 0.7) / this.perLane) * this.span, speed: 7 + rnd() * 9, mi: rnd() < 0.72 ? 0 : 1 });
+        plan.push({ line: roadCenter(k), axis, dir, lane: dir * LANE, s0: ((i + rnd() * 0.7) / this.perLane) * this.span, speed: 7 + rnd() * 9, mi: Math.floor(rnd() * 2.999) });
       }
     }
     const counts = models.map((_, mi) => plan.filter((p) => (p.mi % models.length) === mi).length);
@@ -53,7 +53,7 @@ export class GroundTraffic {
     });
     const total = plan.length;
     const light = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false, fog: false });
-    this.lightMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.35, 0.28, 0.9), light, total * 4);
+    this.lightMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.14, 0.1, 0.3), light, total * 4);
     const flat = (map, w, h) => new THREE.InstancedMesh(new THREE.PlaneGeometry(w, h).rotateX(-Math.PI / 2),
       new THREE.MeshBasicMaterial({ map, color: 0xffffff, transparent: true, toneMapped: false, depthWrite: false, blending: THREE.AdditiveBlending, fog: true }), total);
     this.glowMesh = flat(radialTexture(), this.carLen * 1.9, this.carLen * 1.05);

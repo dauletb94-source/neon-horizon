@@ -20,13 +20,13 @@ void main(){
   float f = fract(along);
   float on = step(0.32, h(cell*1.7 + li*13. + floor(vW.x*0.02) + floor(vW.z*0.02)));
   float tail = smoothstep(0.0,0.05,f) * (1.-smoothstep(0.05,0.42,f));
-  float core = smoothstep(0.75,0.0,across);
-  vec3 c = lane < .5 ? vec3(1.0,0.86,0.55) : vec3(1.0,0.1,0.22);
+  float core = pow(smoothstep(0.9,0.0,across), 1.6);
+  vec3 c = lane < .5 ? vec3(1.0,0.5,0.14) : vec3(1.0,0.04,0.14);
   // second, faster thin streak per lane for more visible motion
   float a2 = vUv.y*0.31 + dir*uTime*sp*1.9; float on2 = step(0.55, h(floor(a2)*2.3 + li*7.));
   float t2 = smoothstep(0.0,0.04,fract(a2)) * (1.-smoothstep(0.04,0.3,fract(a2)));
-  float a = clamp(on*tail*core + on2*t2*core*0.8, 0., 1.);
-  gl_FragColor = vec4(c*a*5.0, a);
+  float a = clamp(on*tail*core*0.85 + on2*t2*core*0.55, 0., 1.);
+  gl_FragColor = vec4(c*a*a*1.05, a*0.8);
 }`;
 
 export function buildGround(citySize, cellSize, roadEvery = 4, farExtent = citySize * 2.6) {
@@ -46,7 +46,7 @@ export function buildGround(citySize, cellSize, roadEvery = 4, farExtent = cityS
     tg.strokeStyle = 'rgba(60,140,255,0.28)'; tg.lineWidth = 2;
     for (let k = 1; k < 8; k++) { tg.beginPath(); tg.moveTo((k * tp) / 8, 0); tg.lineTo((k * tp) / 8, tp); tg.moveTo(0, (k * tp) / 8); tg.lineTo(tp, (k * tp) / 8); tg.stroke(); }
     tg.fillStyle = '#10172c'; tg.fillRect(mid - rwT / 2, 0, rwT, tp); tg.fillRect(0, mid - rwT / 2, tp, rwT);
-    for (const [col, k] of [['rgba(40,220,255,0.95)', -1], ['rgba(255,60,210,0.85)', 1]]) {
+    for (const [col, k] of [['rgba(40,220,255,0.55)', -1], ['rgba(255,60,210,0.4)', 1]]) {
       tg.fillStyle = col; tg.fillRect(mid + k * rwT / 2 - 3, 0, 6, tp); tg.fillRect(0, mid + k * rwT / 2 - 3, tp, 6);
     }
     tg.fillStyle = 'rgba(255,214,140,0.6)';
@@ -58,7 +58,7 @@ export function buildGround(citySize, cellSize, roadEvery = 4, farExtent = cityS
   tileTex.repeat.set(S / period, S / period);
   // align tile phase with the layout: tile x-origin at world -half, tile y-origin at world z=-half
   tileTex.offset.set((half - S / 2) / period, 1 - half / period - S / (2 * period));
-  const baseMat = new THREE.MeshStandardMaterial({ map: tileTex, emissiveMap: tileTex, emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.7, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.25 });
+  const baseMat = new THREE.MeshStandardMaterial({ map: tileTex, emissiveMap: tileTex, emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.45, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.25 });
   const base = new THREE.Mesh(new THREE.PlaneGeometry(S, S).rotateX(-Math.PI / 2), baseMat);
   base.position.y = -0.1; group.add(base);
 
@@ -91,17 +91,17 @@ export function buildGround(citySize, cellSize, roadEvery = 4, farExtent = cityS
     g.fillStyle = '#131b33';
     g.fillRect(mid - rw / 2, 0, rw, px); g.fillRect(0, mid - rw / 2, px, rw);
     // neon curbs
-    for (const [col, k] of [['rgba(40,220,255,0.95)', -1], ['rgba(255,60,210,0.85)', 1]]) {
+    for (const [col, k] of [['rgba(40,220,255,0.6)', -1], ['rgba(255,60,210,0.42)', 1]]) {
       g.fillStyle = col;
       g.fillRect(mid + k * rw / 2 - 4, 0, 8, px); g.fillRect(0, mid + k * rw / 2 - 4, px, 8);
     }
     // dashed centre
-    g.fillStyle = 'rgba(255,200,120,0.95)'; g.fillRect(mid - 4, 0, 2, px); g.fillRect(mid + 2, 0, 2, px); g.fillRect(0, mid - 4, px, 2); g.fillRect(0, mid + 2, px, 2);
-    g.fillStyle = 'rgba(190,230,255,0.7)';
+    g.fillStyle = 'rgba(255,200,120,0.5)'; g.fillRect(mid - 4, 0, 2, px); g.fillRect(mid + 2, 0, 2, px); g.fillRect(0, mid - 4, px, 2); g.fillRect(0, mid + 2, px, 2);
+    g.fillStyle = 'rgba(190,230,255,0.35)';
     for (const k of [-0.5, 0.5]) for (let y = 0; y < px; y += 34) { g.fillRect(mid + k * rw / 2 - 1.5, y, 3, 16); g.fillRect(y, mid + k * rw / 2 - 1.5, 16, 3); }
   }
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 16;
-  const mat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.95, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.25 });
+  const mat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.6, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.25 });
   const city = new THREE.Mesh(new THREE.PlaneGeometry(citySize, citySize).rotateX(-Math.PI / 2), mat);
   city.position.set(0, 0.04, 0); group.add(city);
 

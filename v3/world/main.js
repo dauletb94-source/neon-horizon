@@ -8,7 +8,6 @@ import { createRenderPipeline } from '../engine/renderer.js';
 import { setupSky, addSkyDome } from '../engine/sky.js';
 import { setMaxAnisotropy } from '../engine/materials.js';
 import { loadModels, loadHDRI, setAniso } from '../engine/towers.js';
-import { loadRealModels } from '../engine/realTowers.js';
 import { CityWorld, CITY_SIZE, toWorld } from './CityWorld.js';
 import { CameraController } from './CameraController.js';
 import { PlaqueLayer } from '../ui/plaques.js';
@@ -59,7 +58,6 @@ class CityView {
   async _init(map) {
     // decoder/network failures must never leave an empty city: procedural towers + cars still build
     await loadModels().catch((e) => console.error('tower models failed', e));
-    await loadRealModels().catch((e) => console.error('real models failed', e));
     const hd = await loadHDRI(this.renderer).catch(() => null);
     this.canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); console.error('WebGL context lost'); }, false);
     if (hd) this.scene.environment = hd.env;

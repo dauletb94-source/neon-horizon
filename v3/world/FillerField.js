@@ -50,22 +50,11 @@ export class FillerField {
       const neon = NEON_KEYS[(rnd() * NEON_KEYS.length) | 0], rot = ((rnd() * 4) | 0) * Math.PI / 2;
       const d = dens(p.cx, p.cz), r0 = rnd();
       if (r0 < 0.05 + 0.07 * (1 - d)) { p.taken = 'filler'; continue; }                                  // open dark plaza
-      if (r0 < 0.30 + 0.12 * (1 - d)) { this._podium(p, rnd, neon); continue; }                         // garden podium
-      if (realModels.length && rnd() < 0.5) { // downloaded realistic tower on this plot
-        const ri = (rnd() * realModels.length) | 0;
-        if (realUsed[ri] < (REAL_CAP[ri] ?? 20)) {
-          realUsed[ri]++; p.taken = 'filler';
-          const m = realModels[ri], H = (18 + rnd() * 30) * (0.7 + d * 1.2) + (rnd() < 0.08 ? 40 : 0);
-          const sxz = Math.min(p.cap / Math.max(m.w, m.d), (H / m.height) * 1.7), sy = Math.min(H / m.height, sxz * 1.7);
-          realItems.push({ ri, x: p.cx, z: p.cz, rot: ((rnd() * 4) | 0) * Math.PI / 2, sxz, sy, neon: neon, plot: p });
-          p.h = m.height * sy; p.half = Math.max(m.w, m.d) * sxz / 2;
-          continue;
-        }
-      }
-      const kind = pickKind(rnd, 0.06 + 0.08 * d), hero = HERO_KINDS.includes(kind);
-      const hc = hero ? 3 : pickClass(Math.pow(rnd(), 0.9) * (0.35 + 0.75 * d));                    // dense core -> taller classes
-      const mr = rnd(), mix = mr < 0.3 ? 0.5 + rnd() * 0.25 : mr < 0.8 ? 0.85 + rnd() * 0.3 : 1.2 + rnd() * 0.4; // low / mid / tall mix per plot
-      const sy = hero ? 0.9 + rnd() * 0.45 : Math.min(1.9, Math.max(0.4, (0.55 + rnd() * 0.75) * (0.7 + 0.6 * d) * mix));
+      if (r0 < 0.34 + 0.12 * (1 - d)) { this._podium(p, rnd, neon); continue; }                         // garden podium
+      const kind = pickKind(rnd, 0.03 + 0.04 * d), hero = HERO_KINDS.includes(kind);
+      const hc = hero ? 3 : pickClass(Math.pow(rnd(), 0.9) * (0.1 + 0.4 * d));                    // dense core -> taller classes
+      const mr = rnd(), mix = mr < 0.3 ? 0.5 + rnd() * 0.25 : mr < 0.85 ? 0.8 + rnd() * 0.3 : 1.05 + rnd() * 0.25; // low / mid / tall mix per plot
+      const sy = hero ? 0.8 + rnd() * 0.3 : Math.min(1.45, Math.max(0.4, (0.55 + rnd() * 0.75) * (0.7 + 0.6 * d) * mix));
       items.push(this._item(kind, hc, p, rot, hero ? 0.9 : 0.8 + rnd() * 0.2, sy, neon));
     }
 
@@ -115,7 +104,7 @@ export class FillerField {
     const by = new Map(), v = new THREE.Vector3(), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
     for (const it of items) {
       const model = modelFor(it.kind, it.hc), t = model && this._topSection(model);
-      if (!t || rnd() < 0.18) continue;
+      if (!t || [8, 14, 15].includes(it.kind) || rnd() < 0.4) continue; // round towers: a rectangular trim would float; fewer trims = cleaner roofs
       const col = COL[(rnd() * COL.length) | 0], lvl = rnd();
       m4.compose(new THREE.Vector3(it.x, 0, it.z), q.setFromAxisAngle(up, it.rot), new THREE.Vector3(it.sxz, it.sy, it.sxz));
       const out = (yy, grow) => {
@@ -126,7 +115,6 @@ export class FillerField {
       };
       out(t.y + 0.25, 0.05);                         // roof-edge trim
       if (lvl < 0.55) out(t.y - 1.9 / Math.max(it.sy, 0.5), 0.12); // lit crown band
-      if (lvl < 0.22) out(t.y - 4.2 / Math.max(it.sy, 0.5), 0.12);  // second band: stacked crown
     }
     const g = new THREE.Group(); g.userData.noAudit = true;
     for (const [col, arr] of by) {

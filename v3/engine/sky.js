@@ -82,7 +82,7 @@ export function setupSky(renderer, scene) {
   // navy haze (matching the horizon glow + distant skyline) instead of
   // vanishing into the void; density eased slightly so the skyline backdrop
   // still reads through it.
-  scene.fog = new THREE.FogExp2(0x081a44, 0.00085); // glowing blue city haze: far towers dissolve into it, no dark band at the horizon
+  scene.fog = new THREE.FogExp2(0x040d2a, 0.00085); // glowing blue city haze: far towers dissolve into it, no dark band at the horizon
 
   pmrem.dispose();
   return { skyTex };
@@ -107,7 +107,7 @@ export function addSkyDome(scene) {
         vec3 c = mix(hor, mid, smoothstep(0.0,0.22,t));
         c = mix(c, zen, smoothstep(0.12,0.55,t));
         // luminous haze: cyan-blue glow rising from the skyline, soft magenta bounce above it
-        c += vec3(0.03,0.16,0.50) * smoothstep(0.0,0.09,t) * exp(-t*9.0) * 0.8;
+        c += vec3(0.02,0.10,0.34) * smoothstep(0.0,0.09,t) * exp(-t*9.0) * 0.7;
         c += vec3(0.22,0.07,0.30) * exp(-abs(t-0.07)*14.) * 0.12;
         // stars (fade toward the horizon)
         vec3 p = vD*420.; vec3 ip = floor(p); float r = h3(ip);

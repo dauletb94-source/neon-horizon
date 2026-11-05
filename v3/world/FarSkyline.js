@@ -63,7 +63,7 @@ varying vec3 vW; varying vec3 vN; varying vec3 vL; varying vec4 vP; varying vec3
 float h2(vec2 p){ p=fract(p*vec2(.1031,.1030)); p+=dot(p,p.yx+33.33); return fract((p.x+p.y)*p.x); }
 void main(){
   float fogF = 1. - exp(-pow(vDist*uFogD, 2.));
-  vec3 base = vec3(0.012,0.022,0.055) * (0.6 + 0.8*h2(vec2(vP.y*13.1, 4.2)));
+  vec3 base = vec3(0.005,0.011,0.03) * (0.6 + 0.8*h2(vec2(vP.y*13.1, 4.2)));
   vec3 emis = vec3(0.);
   bool wall = abs(vN.y) < 0.5;
   float seed = vP.y;
@@ -87,35 +87,36 @@ void main(){
     float mullion = smoothstep(0.0,0.12,f.x) * smoothstep(1.0,0.88,f.x) * smoothstep(0.0,0.16,f.y) * smoothstep(1.0,0.84,f.y);
     // far: keep it speckled (coarse random lit rooms + faint mean) instead of a flat pastel average
     vec2 cc = floor(cell / vec2(3.0, 2.0));
-    float sparkle = step(h2(cc + seed*3.3), dens*0.55) * (0.25 + 0.5*h2(cc*1.9 + seed));
-    float lit = mix(on*bright*mullion, sparkle * 0.55 + min(dens,0.8)*0.03, fade);
-    emis = lc * lit * 1.2;
+    float sparkle = step(h2(cc + seed*3.3), dens*0.85) * (0.3 + 0.9*h2(cc*1.9 + seed)) * (0.75 + 0.25*sin(uTime*1.5 + h2(cc+seed)*40.));
+    float lit = mix(on*bright*mullion, sparkle * 0.18 + min(dens,0.8)*0.035, fade);
+    lc = mix(lc, vec3(0.25,0.55,1.0), 0.45*fade);
+    emis = lc * lit * 0.85;
     // glowing floor wash + vertical gradient (bright base glow of the street, dimmer higher up)
     float hn = clamp(vW.y / (vSize.y*1.0), 0., 1.);
     emis += vTint * 0.02 * floorLit * (1.-hn*0.6) * (1.-fade);
     // neon corner strips on some towers: vertical lines at the building edges
     float edge = max(abs(vL.x), abs(vL.z));
     float strip = step(0.46, edge) * step(vP.w, 0.5);
-    emis += vTint * strip * 1.3 * (0.6 + 0.4*sin(vW.y*0.05)) * (1. - 0.85*fogF);
+    emis += vTint * strip * 1.3 * (0.6 + 0.4*sin(vW.y*0.05)) * (1. - 0.95*fogF);
     base += vec3(0.01,0.02,0.05) * f.y;
     // lit crown: a glowing band near the top of ~45% of towers (cyan / magenta / tint), plus a second lower band on a few
-    float crown = step(0.55, h2(vec2(seed, 9.1)));
+    float crown = step(0.4, h2(vec2(seed, 9.1)));
     float hy = vL.y;
     float band = smoothstep(0.86, 0.9, hy) * (1. - smoothstep(0.935, 0.965, hy));
     float band2 = step(0.8, h2(vec2(seed, 3.3))) * smoothstep(0.7, 0.73, hy) * (1. - smoothstep(0.745, 0.77, hy));
     vec3 cc2 = h2(vec2(seed, 5.5)) < 0.5 ? vec3(0.1,0.9,1.0) : vec3(1.0,0.2,0.85);
-    emis += cc2 * crown * (band + band2*0.7) * 2.6 * (1. - 0.6*fogF);
+    emis += cc2 * crown * (band + band2*0.7) * 2.2 * (1. - 0.9*fogF);
   } else if (vN.y > 0.5) {
     // roof: no windows ever. dark slab; neon rim, garden, or beacon by roof type
     float edge = max(abs(vL.x), abs(vL.z));
     float rim = smoothstep(0.38, 0.45, edge);
     vec3 rc = h2(vec2(seed, 5.5)) < 0.5 ? vec3(0.1,0.9,1.0) : vec3(1.0,0.2,0.85);
-    if (vP.z < 0.5) emis += mix(vTint, rc, 0.7) * rim * 3.6;                      // neon crown
-    else if (vP.z < 0.74) { if (edge < 0.36) { base = vec3(0.012,0.05,0.016); emis += vec3(0.1,0.55,0.18) * 0.55 * (0.6+0.4*h2(floor(vW.xz*0.5))); } emis += vTint*rim*0.8; } // rooftop garden
+    if (vP.z < 0.4) emis += mix(vTint, rc, 0.7) * rim * 2.4 * (1. - 0.8*fogF);                      // neon crown
+    else if (vP.z < 0.8) { if (edge < 0.44) { base = vec3(0.012,0.06,0.02); emis += vec3(0.25,1.0,0.4) * 1.9 * (0.6+0.4*h2(floor(vW.xz*0.5))); } emis += vTint*rim*0.8; } // rooftop garden
     else if (h2(floor(vW.xz*0.8)+seed) > 0.97) emis += vec3(1.,0.9,0.7)*1.2;                                                              // lone lamps
     if (vL.y > 1.005) emis += vec3(1.,0.15,0.1) * 2.5;               // beacon on the spire tip
   }
-  vec3 c = mix(base, uFogC, fogF) + emis * (1. - 0.72*fogF);
+  vec3 c = mix(base, uFogC, fogF) + emis * (1. - 0.88*fogF);
   gl_FragColor = vec4(c, 1.);
 }`;
 
@@ -128,7 +129,7 @@ export class FarSkyline {
     const lists = fams.map(() => []);
     const kMax = Math.ceil(SKYLINE_EXTENT / PERIOD) + 1;
     const inner = FAR_EXTENT * 0.985;
-    const TINTS = [[0.1, 0.8, 1.0], [0.1, 0.8, 1.0], [0.25, 0.45, 1.0], [1.0, 0.2, 0.85], [0.6, 0.35, 1.0], [1.0, 0.65, 0.3], [0.2, 1.0, 0.7]];
+    const TINTS = [[0.05, 0.7, 1.0], [0.05, 0.7, 1.0], [0.1, 0.35, 1.0], [0.1, 0.35, 1.0], [1.0, 0.15, 0.8], [0.5, 0.25, 1.0]];
     for (let kx = -kMax; kx <= kMax; kx++) for (let kz = -kMax; kz <= kMax; kz++) {
       const bx = roadCenter(kx) + PERIOD / 2, bz = roadCenter(kz) + PERIOD / 2, r = Math.hypot(bx, bz);
       if (r <= inner || r > SKYLINE_EXTENT) continue;
@@ -136,18 +137,18 @@ export class FarSkyline {
       const cluster = 0.5 + 0.5 * Math.sin(bx * 0.0031 + 1.7) * Math.sin(bz * 0.0027 + 0.3); // low-frequency downtown clusters
       const swell = Math.sin(Math.min(1, k * 1.25) * Math.PI) * 0.55 + 0.55;               // tall mid-distance, lower toward haze
       const plots = [];
-      if (rnd() < 0.3) plots.push([bx, bz, 30 + rnd() * 14]);
-      else for (const sx of [-1, 1]) for (const sz of [-1, 1]) if (rnd() > 0.04) plots.push([bx + sx * 13.2, bz + sz * 13.2, 13 + rnd() * 10]);
+      if (rnd() < 0.18) plots.push([bx, bz, 30 + rnd() * 14]);
+      else for (const sx of [-1, 1]) for (const sz of [-1, 1]) if (rnd() > 0.02) plots.push([bx + sx * 13.2, bz + sz * 13.2, 13 + rnd() * 10]);
       for (const [x, z, cap] of plots) {
         const tall = Math.pow(rnd(), 1.7);
         const hm = rnd(), hmix = hm < 0.34 ? 0.35 + rnd() * 0.25 : hm < 0.8 ? 0.7 + rnd() * 0.4 : 1.1 + rnd() * 0.35; // low / mid / tall
         const H = (30 + tall * 200 * (0.35 + cluster)) * swell * hmix + rnd() * 16;
         const fr = rnd(), fam = fr < 0.26 ? 0 : fr < 0.4 ? 1 : fr < 0.52 ? 2 : fr < 0.62 ? 3 : fr < 0.76 ? 4 : fr < 0.9 ? 5 : 6;
         const tint = TINTS[(rnd() * TINTS.length) | 0];
-        lists[fam].push({ x, z, w: cap * (0.8 + rnd() * 0.2), d: cap * (0.8 + rnd() * 0.2), H, tint, dens: 0.12 + rnd() * 0.5, seed: rnd() * 50, roof: rnd(), glow: rnd() });
+        lists[fam].push({ x, z, w: cap * (0.8 + rnd() * 0.2), d: cap * (0.8 + rnd() * 0.2), H, tint, dens: 0.15 + rnd() * 0.4, seed: rnd() * 50, roof: rnd(), glow: rnd() });
       }
     }
-    this.uniforms = { uFogC: { value: new THREE.Color(0x081a44) }, uFogD: { value: 0.00085 }, uTime: { value: 0 } };
+    this.uniforms = { uFogC: { value: new THREE.Color(0x040d2a) }, uFogD: { value: 0.00085 }, uTime: { value: 0 } };
     this.mat = new THREE.ShaderMaterial({ uniforms: this.uniforms, vertexShader: VERT, fragmentShader: FRAG, extensions: { derivatives: true } });
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), s = new THREE.Vector3();
     this.count = 0;

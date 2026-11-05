@@ -50,7 +50,7 @@ export class CityWorld {
     const reserve = (b) => this.metro.blocks(b);
 
     // -------- hero landmark towers: claim whole blocks/plots BEFORE the filler fills the rest --------
-    this.heroes = safe('heroes', () => new HeroTowers(this.group, { count: 52 }));
+    this.heroes = safe('heroes', () => new HeroTowers(this.group, { count: 9 }));
 
     // -------- ambient filler skyline (instanced): fills every remaining plot + the far field --------
     this.filler = safe('filler', () => new FillerField(this.group, { skipChance: 0.08, reserve }));
@@ -121,6 +121,7 @@ export class CityWorld {
 
   update(t) {
     this.ground.userData.trailMat.uniforms.uTime.value = t;
+    if (this.farSkyline) this.farSkyline.uniforms.uTime.value = t;
     for (const b of this.buildings.values()) b.update(t);
     this.flyingCars.update(t);
     this.groundTraffic.update(t);

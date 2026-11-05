@@ -107,7 +107,7 @@ export class HeroTowers {
       if (!ps.every(free)) return;
       const cx = ps.reduce((s, p) => s + p.cx, 0) / ps.length, cz = ps.reduce((s, p) => s + p.cz, 0) / ps.length;
       const fp = r.n * CELL - 2.8;
-      const H = r.n === 3 ? 170 + rnd() * 80 : r.n === 2 ? 125 + rnd() * 70 : 85 + rnd() * 60;
+      const H = r.n === 3 ? 105 + rnd() * 35 : r.n === 2 ? 80 + rnd() * 32 : 60 + rnd() * 25; // pass 12: lower landmarks
       const TYPES = ['cylinder', 'curved', 'setback', 'cylinder', 'slant', 'curved', 'twist', 'cylinder', 'twin', 'needle'];
       const type = TYPES[(k + ((rnd() * 3) | 0)) % TYPES.length];
       const neon = ['cyan', 'magenta', 'blue', 'violet', 'cyan', 'magenta'][(rnd() * 6) | 0];
