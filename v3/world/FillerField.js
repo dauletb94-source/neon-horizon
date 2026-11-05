@@ -22,7 +22,7 @@ function mulberry32(a) {
   };
 }
 const NEON_KEYS = ['cyan', 'cyan', 'cyan', 'blue', 'blue', 'magenta', 'cyan', 'violet'];
-const CLASS_W = [0.1, 0.3, 0.38, 0.22];
+const CLASS_W = [0.17, 0.37, 0.33, 0.13]; // pass 11: more low/mid-rise, fewer needle towers
 const NORMAL_KINDS = Array.from({ length: KINDS }, (_, i) => i).filter((i) => !HERO_KINDS.includes(i)).concat([8]); // kind 8 = curved glass cylinder: kept rare (~1 in 12) so silhouettes are not all tubes
 const pickKind = (rnd, heroP) => (rnd() < heroP ? HERO_KINDS[(rnd() * HERO_KINDS.length) | 0] : NORMAL_KINDS[(rnd() * NORMAL_KINDS.length) | 0]);
 function pickClass(r, boost = 0) {
@@ -64,7 +64,8 @@ export class FillerField {
       }
       const kind = pickKind(rnd, 0.06 + 0.08 * d), hero = HERO_KINDS.includes(kind);
       const hc = hero ? 3 : pickClass(Math.pow(rnd(), 0.9) * (0.35 + 0.75 * d));                    // dense core -> taller classes
-      const sy = hero ? 0.9 + rnd() * 0.45 : (0.55 + rnd() * 0.75) * (0.7 + 0.6 * d);
+      const mr = rnd(), mix = mr < 0.3 ? 0.5 + rnd() * 0.25 : mr < 0.8 ? 0.85 + rnd() * 0.3 : 1.2 + rnd() * 0.4; // low / mid / tall mix per plot
+      const sy = hero ? 0.9 + rnd() * 0.45 : Math.min(1.9, Math.max(0.4, (0.55 + rnd() * 0.75) * (0.7 + 0.6 * d) * mix));
       items.push(this._item(kind, hc, p, rot, hero ? 0.9 : 0.8 + rnd() * 0.2, sy, neon));
     }
 
@@ -77,13 +78,62 @@ export class FillerField {
       const fk = pickKind(rnd, 0.05);
       const hc = HERO_KINDS.includes(fk) ? 3 : pickClass(rnd(), 0.12 * Math.sin(Math.min(1, k * 1.6) * Math.PI)); // tall in the mid-distance
       const taper = 1.25 - 0.55 * k; // lower, hazier silhouettes toward the horizon
-      items.push(this._item(fk, hc, p, ((rnd() * 4) | 0) * Math.PI / 2, 0.95 + rnd() * 0.5, (0.55 + rnd() * 0.7) * taper * (hd < 120 ? 0.6 : 1), NEON_KEYS[(rnd() * NEON_KEYS.length) | 0]));
+      const fm = rnd(), fmix = fm < 0.32 ? 0.45 + rnd() * 0.25 : fm < 0.82 ? 0.85 + rnd() * 0.3 : 1.25 + rnd() * 0.45;
+      items.push(this._item(fk, hc, p, ((rnd() * 4) | 0) * Math.PI / 2, 0.95 + rnd() * 0.5, (0.55 + rnd() * 0.7) * taper * fmix * (hd < 120 ? 0.6 : 1), NEON_KEYS[(rnd() * NEON_KEYS.length) | 0]));
     }
     // horizon: now drawn by world/FarSkyline.js (dense lit shader skyline all the way to the haze)
     this.count = items.length + realItems.length;
     this._build(items);
     this._buildReal(realItems);
+    this._buildTrims(items, rnd);
     this._buildBridges(rnd);
+  }
+
+  // Pass 11: bright cyan/magenta roof trims + glowing crown bands on filler towers. The trim rectangle is measured from the
+  // model itself (highest tier top with a real footprint), so it always hugs the actual roof edge, never floats.
+  _topSection(model) {
+    if (model.top !== undefined) return model.top;
+    const vs = []; let H = 0, x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+    for (const m of model.meshes) {
+      if (m.material.name === 'lamp') continue;
+      const a = m.geometry.attributes.position;
+      for (let i = 0; i < a.count; i++) { const x = a.getX(i), y = a.getY(i), z = a.getZ(i); vs.push(x, y, z); H = Math.max(H, y); x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
+    }
+    const W = x1 - x0, D = z1 - z0, levels = new Set();
+    for (let i = 1; i < vs.length; i += 3) if (vs[i] > H * 0.45) levels.add(Math.round(vs[i] * 2) / 2);
+    let best = null;
+    for (const y of [...levels].sort((a, b) => b - a)) {
+      let ax0 = 1e9, ax1 = -1e9, az0 = 1e9, az1 = -1e9, n = 0;
+      for (let i = 0; i < vs.length; i += 3) if (Math.abs(vs[i + 1] - y) < 0.3) { ax0 = Math.min(ax0, vs[i]); ax1 = Math.max(ax1, vs[i]); az0 = Math.min(az0, vs[i + 2]); az1 = Math.max(az1, vs[i + 2]); n++; }
+      const w = ax1 - ax0, d = az1 - az0;
+      if (n >= 4 && w >= 3 && d >= 3 && w * d >= 0.16 * W * D) { best = { y, cx: (ax0 + ax1) / 2, cz: (az0 + az1) / 2, w, d }; break; }
+    }
+    return (model.top = best);
+  }
+  _buildTrims(items, rnd) {
+    const COL = ['cyan', 'magenta', 'cyan', 'magenta', 'cyan', 'blue', 'violet', 'magenta'];
+    const by = new Map(), v = new THREE.Vector3(), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
+    for (const it of items) {
+      const model = modelFor(it.kind, it.hc), t = model && this._topSection(model);
+      if (!t || rnd() < 0.18) continue;
+      const col = COL[(rnd() * COL.length) | 0], lvl = rnd();
+      m4.compose(new THREE.Vector3(it.x, 0, it.z), q.setFromAxisAngle(up, it.rot), new THREE.Vector3(it.sxz, it.sy, it.sxz));
+      const out = (yy, grow) => {
+        const hw = t.w / 2 + grow, hd = t.d / 2 + grow, X0 = t.cx - hw, X1 = t.cx + hw, Z0 = t.cz - hd, Z1 = t.cz + hd, c = [[X0, Z0], [X1, Z0], [X1, Z1], [X0, Z1]];
+        const P = c.map(([x, z]) => v.set(x, yy, z).applyMatrix4(m4).toArray());
+        const arr = by.get(col) || by.set(col, []).get(col);
+        for (let k = 0; k < 4; k++) arr.push(...P[k], ...P[(k + 1) % 4]);
+      };
+      out(t.y + 0.25, 0.05);                         // roof-edge trim
+      if (lvl < 0.55) out(t.y - 1.9 / Math.max(it.sy, 0.5), 0.12); // lit crown band
+      if (lvl < 0.22) out(t.y - 4.2 / Math.max(it.sy, 0.5), 0.12);  // second band: stacked crown
+    }
+    const g = new THREE.Group(); g.userData.noAudit = true;
+    for (const [col, arr] of by) {
+      const ls = new THREE.Mesh(thickEdgeGeometry(new Float32Array(arr), 0.55), glowEdgeMaterial(NEON[col], 2.2));
+      ls.frustumCulled = false; g.add(ls);
+    }
+    this.group.add(g); this.trims = g;
   }
 
   // xz scale is capped so the (podium-inclusive) footprint fits the plot; y scale is free

@@ -2,32 +2,38 @@
 // dark base so the horizon is never a void. Streets are the empty grid cells left by FillerField
 // (every `roadEvery`-th cell), centred at (i+0.5)*cellSize.
 import * as THREE from '../vendor/three/three.module.js';
+import { ROAD_FRAC } from './layout.js';
 
 const trailVert = `varying vec2 vUv; varying vec3 vW; void main(){ vUv=uv; vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`;
 const trailFrag = `
 uniform float uTime; varying vec2 vUv; varying vec3 vW;
 float h(float n){ return fract(sin(n*91.345)*47453.5453); }
 void main(){
-  // vUv.x across the road (0..1), vUv.y along it in world units
-  float lane = vUv.x < 0.5 ? 0. : 1.;
-  float across = abs(fract(vUv.x*2.)-0.5)*2.;           // 0 centre of lane .. 1 edge
+  // vUv.x across the road (0..1), vUv.y along it in world units. 4 lanes: 2 outbound (warm white) + 2 inbound (red)
+  float li = floor(vUv.x*4.);
+  float lane = li < 2. ? 0. : 1.;
+  float across = abs(fract(vUv.x*4.)-0.5)*2.;           // 0 centre of lane .. 1 edge
   float dir = lane < .5 ? 1. : -1.;
-  float along = vUv.y*0.16 + dir*uTime*(0.5+0.25*h(floor(vUv.y*0.16)*0.0+lane+floor(vW.x*0.01+vW.z*0.013)));
+  float sp = 0.45 + 0.35*h(li*3.7 + floor(vW.x*0.01+vW.z*0.013));
+  float along = vUv.y*0.12 + dir*uTime*sp;
   float cell = floor(along);
   float f = fract(along);
-  float on = step(0.55, h(cell*1.7 + lane*13. + floor(vW.x*0.02) + floor(vW.z*0.02)));
-  float tail = smoothstep(0.0,0.07,f) * (1.-smoothstep(0.07,0.3,f));
-  float core = smoothstep(0.55,0.0,across);
-  vec3 c = lane < .5 ? vec3(1.0,0.92,0.75) : vec3(1.0,0.12,0.2);
-  float a = on*tail*core;
-  gl_FragColor = vec4(c*a*2.4, a);
+  float on = step(0.32, h(cell*1.7 + li*13. + floor(vW.x*0.02) + floor(vW.z*0.02)));
+  float tail = smoothstep(0.0,0.05,f) * (1.-smoothstep(0.05,0.42,f));
+  float core = smoothstep(0.75,0.0,across);
+  vec3 c = lane < .5 ? vec3(1.0,0.86,0.55) : vec3(1.0,0.1,0.22);
+  // second, faster thin streak per lane for more visible motion
+  float a2 = vUv.y*0.31 + dir*uTime*sp*1.9; float on2 = step(0.55, h(floor(a2)*2.3 + li*7.));
+  float t2 = smoothstep(0.0,0.04,fract(a2)) * (1.-smoothstep(0.04,0.3,fract(a2)));
+  float a = clamp(on*tail*core + on2*t2*core*0.8, 0., 1.);
+  gl_FragColor = vec4(c*a*5.0, a);
 }`;
 
 export function buildGround(citySize, cellSize, roadEvery = 4, farExtent = citySize * 2.6) {
   const group = new THREE.Group();
   const cells = Math.round(citySize / cellSize);
   const half = citySize / 2;
-  const roadW = cellSize * 0.5;
+  const roadW = cellSize * ROAD_FRAC;
 
   // base: huge ground carrying the SAME street grid (tiled, one tile = one block + its streets) out past the far skyline,
   // so streets run all the way to the horizon and the layout stays one consistent grid everywhere.
@@ -39,9 +45,9 @@ export function buildGround(citySize, cellSize, roadEvery = 4, farExtent = cityS
     tg.fillStyle = '#0c1226'; tg.fillRect(0, 0, tp, tp);               // paved block
     tg.strokeStyle = 'rgba(60,140,255,0.28)'; tg.lineWidth = 2;
     for (let k = 1; k < 8; k++) { tg.beginPath(); tg.moveTo((k * tp) / 8, 0); tg.lineTo((k * tp) / 8, tp); tg.moveTo(0, (k * tp) / 8); tg.lineTo(tp, (k * tp) / 8); tg.stroke(); }
-    tg.fillStyle = '#080b12'; tg.fillRect(mid - rwT / 2, 0, rwT, tp); tg.fillRect(0, mid - rwT / 2, tp, rwT);
+    tg.fillStyle = '#10172c'; tg.fillRect(mid - rwT / 2, 0, rwT, tp); tg.fillRect(0, mid - rwT / 2, tp, rwT);
     for (const [col, k] of [['rgba(40,220,255,0.95)', -1], ['rgba(255,60,210,0.85)', 1]]) {
-      tg.fillStyle = col; tg.fillRect(mid + k * rwT / 2 - 1.5, 0, 3, tp); tg.fillRect(0, mid + k * rwT / 2 - 1.5, tp, 3);
+      tg.fillStyle = col; tg.fillRect(mid + k * rwT / 2 - 3, 0, 6, tp); tg.fillRect(0, mid + k * rwT / 2 - 3, tp, 6);
     }
     tg.fillStyle = 'rgba(255,214,140,0.6)';
     for (let y = 0; y < tp; y += 28) { tg.fillRect(mid - 1, y, 2, 13); tg.fillRect(y, mid - 1, 13, 2); }
@@ -52,7 +58,7 @@ export function buildGround(citySize, cellSize, roadEvery = 4, farExtent = cityS
   tileTex.repeat.set(S / period, S / period);
   // align tile phase with the layout: tile x-origin at world -half, tile y-origin at world z=-half
   tileTex.offset.set((half - S / 2) / period, 1 - half / period - S / (2 * period));
-  const baseMat = new THREE.MeshStandardMaterial({ map: tileTex, emissiveMap: tileTex, emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.35, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.25 });
+  const baseMat = new THREE.MeshStandardMaterial({ map: tileTex, emissiveMap: tileTex, emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.7, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.25 });
   const base = new THREE.Mesh(new THREE.PlaneGeometry(S, S).rotateX(-Math.PI / 2), baseMat);
   base.position.y = -0.1; group.add(base);
 
@@ -82,19 +88,20 @@ export function buildGround(citySize, cellSize, roadEvery = 4, farExtent = cityS
   for (let i = 0; i < cells; i += roadEvery) {
     const mid = (i + 0.5) * cp;
     // asphalt strip
-    g.fillStyle = '#0b0e16';
+    g.fillStyle = '#131b33';
     g.fillRect(mid - rw / 2, 0, rw, px); g.fillRect(0, mid - rw / 2, px, rw);
     // neon curbs
     for (const [col, k] of [['rgba(40,220,255,0.95)', -1], ['rgba(255,60,210,0.85)', 1]]) {
       g.fillStyle = col;
-      g.fillRect(mid + k * rw / 2 - 2, 0, 4, px); g.fillRect(0, mid + k * rw / 2 - 2, px, 4);
+      g.fillRect(mid + k * rw / 2 - 4, 0, 8, px); g.fillRect(0, mid + k * rw / 2 - 4, px, 8);
     }
     // dashed centre
-    g.fillStyle = 'rgba(255,214,140,0.6)';
-    for (let y = 0; y < px; y += 34) { g.fillRect(mid - 1.5, y, 3, 16); g.fillRect(y, mid - 1.5, 16, 3); }
+    g.fillStyle = 'rgba(255,200,120,0.95)'; g.fillRect(mid - 4, 0, 2, px); g.fillRect(mid + 2, 0, 2, px); g.fillRect(0, mid - 4, px, 2); g.fillRect(0, mid + 2, px, 2);
+    g.fillStyle = 'rgba(190,230,255,0.7)';
+    for (const k of [-0.5, 0.5]) for (let y = 0; y < px; y += 34) { g.fillRect(mid + k * rw / 2 - 1.5, y, 3, 16); g.fillRect(y, mid + k * rw / 2 - 1.5, 16, 3); }
   }
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 16;
-  const mat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.5, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.25 });
+  const mat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.95, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.25 });
   const city = new THREE.Mesh(new THREE.PlaneGeometry(citySize, citySize).rotateX(-Math.PI / 2), mat);
   city.position.set(0, 0.04, 0); group.add(city);
 

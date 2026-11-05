@@ -39,7 +39,11 @@ function families() {
   const p = wedgeG.attributes.position;
   for (let i = 0; i < p.count; i++) if (p.getY(i) > 0.99) p.setY(i, 1 - (p.getX(i) + 0.5) * 0.22);
   wedgeG.computeVertexNormals();
-  return [slab, stepped, wedgeG, spired];
+  // pass 11 silhouettes: twin towers of unequal height, podium + slim tower, and a 4-tier ziggurat
+  const twin = merge([boxGeo(0.46, 0.78, 0.9, -0.26, 0, 0), boxGeo(0.4, 1.0, 0.7, 0.28, 0, 0.05), boxGeo(0.12, 0.06, 0.2, 0, 0.55, 0)]);
+  const podTower = merge([boxGeo(1, 0.22, 1), boxGeo(0.58, 0.64, 0.58, 0, 0.22), boxGeo(0.4, 0.14, 0.4, 0, 0.86)]);
+  const zig = merge([boxGeo(1, 0.4, 1), boxGeo(0.8, 0.3, 0.8, 0, 0.4), boxGeo(0.58, 0.2, 0.58, 0, 0.7), boxGeo(0.34, 0.1, 0.34, 0, 0.9)]);
+  return [slab, stepped, wedgeG, spired, twin, podTower, zig];
 }
 
 const VERT = `
@@ -94,12 +98,20 @@ void main(){
     float strip = step(0.46, edge) * step(vP.w, 0.5);
     emis += vTint * strip * 1.3 * (0.6 + 0.4*sin(vW.y*0.05)) * (1. - 0.85*fogF);
     base += vec3(0.01,0.02,0.05) * f.y;
+    // lit crown: a glowing band near the top of ~45% of towers (cyan / magenta / tint), plus a second lower band on a few
+    float crown = step(0.55, h2(vec2(seed, 9.1)));
+    float hy = vL.y;
+    float band = smoothstep(0.86, 0.9, hy) * (1. - smoothstep(0.935, 0.965, hy));
+    float band2 = step(0.8, h2(vec2(seed, 3.3))) * smoothstep(0.7, 0.73, hy) * (1. - smoothstep(0.745, 0.77, hy));
+    vec3 cc2 = h2(vec2(seed, 5.5)) < 0.5 ? vec3(0.1,0.9,1.0) : vec3(1.0,0.2,0.85);
+    emis += cc2 * crown * (band + band2*0.7) * 2.6 * (1. - 0.6*fogF);
   } else if (vN.y > 0.5) {
     // roof: no windows ever. dark slab; neon rim, garden, or beacon by roof type
     float edge = max(abs(vL.x), abs(vL.z));
     float rim = smoothstep(0.38, 0.45, edge);
-    if (vP.z < 0.34) emis += vTint * rim * 2.2;                      // neon crown
-    else if (vP.z < 0.62) { if (edge < 0.36) { base = vec3(0.012,0.05,0.016); emis += vec3(0.1,0.55,0.18) * 0.55 * (0.6+0.4*h2(floor(vW.xz*0.5))); } emis += vTint*rim*0.8; } // rooftop garden
+    vec3 rc = h2(vec2(seed, 5.5)) < 0.5 ? vec3(0.1,0.9,1.0) : vec3(1.0,0.2,0.85);
+    if (vP.z < 0.5) emis += mix(vTint, rc, 0.7) * rim * 3.6;                      // neon crown
+    else if (vP.z < 0.74) { if (edge < 0.36) { base = vec3(0.012,0.05,0.016); emis += vec3(0.1,0.55,0.18) * 0.55 * (0.6+0.4*h2(floor(vW.xz*0.5))); } emis += vTint*rim*0.8; } // rooftop garden
     else if (h2(floor(vW.xz*0.8)+seed) > 0.97) emis += vec3(1.,0.9,0.7)*1.2;                                                              // lone lamps
     if (vL.y > 1.005) emis += vec3(1.,0.15,0.1) * 2.5;               // beacon on the spire tip
   }
@@ -128,8 +140,9 @@ export class FarSkyline {
       else for (const sx of [-1, 1]) for (const sz of [-1, 1]) if (rnd() > 0.04) plots.push([bx + sx * 13.2, bz + sz * 13.2, 13 + rnd() * 10]);
       for (const [x, z, cap] of plots) {
         const tall = Math.pow(rnd(), 1.7);
-        const H = (30 + tall * 200 * (0.35 + cluster)) * swell + rnd() * 16;
-        const fam = rnd() < 0.5 ? 0 : (rnd() < 0.34 ? 1 : (rnd() < 0.5 ? 2 : 3));
+        const hm = rnd(), hmix = hm < 0.34 ? 0.35 + rnd() * 0.25 : hm < 0.8 ? 0.7 + rnd() * 0.4 : 1.1 + rnd() * 0.35; // low / mid / tall
+        const H = (30 + tall * 200 * (0.35 + cluster)) * swell * hmix + rnd() * 16;
+        const fr = rnd(), fam = fr < 0.26 ? 0 : fr < 0.4 ? 1 : fr < 0.52 ? 2 : fr < 0.62 ? 3 : fr < 0.76 ? 4 : fr < 0.9 ? 5 : 6;
         const tint = TINTS[(rnd() * TINTS.length) | 0];
         lists[fam].push({ x, z, w: cap * (0.8 + rnd() * 0.2), d: cap * (0.8 + rnd() * 0.2), H, tint, dens: 0.12 + rnd() * 0.5, seed: rnd() * 50, roof: rnd(), glow: rnd() });
       }

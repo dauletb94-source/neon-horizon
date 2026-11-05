@@ -14,7 +14,8 @@ export const CELL = CITY_SIZE / CELLS;           // 16.15
 export const HALF = CITY_SIZE / 2;
 export const ROAD_EVERY = 4;
 export const PERIOD = ROAD_EVERY * CELL;         // distance between street centre-lines
-export const ROAD_W = CELL * 0.5;                // asphalt width
+export const ROAD_FRAC = 0.72;                   // asphalt width as a fraction of one cell (pass 11: wide avenues, was 0.5)
+export const ROAD_W = CELL * ROAD_FRAC;          // asphalt width
 export const SIDEWALK = 1.0;                     // required clear gap between any building footprint and the asphalt edge
 export const NEAR_BLOCKS = 6;                    // blocks per axis in the playable city (k = 0..5)
 export const NEAR_CAP = CELL - 2.8;              // max footprint of a near-zone building (13.35)
