@@ -85,7 +85,7 @@ function litTexture(skinIdx, seed) {
   g.fillStyle = '#000'; g.fillRect(0, 0, c.width, c.height);
   const rnd = mkRng(seed);
   for (let r = 0; r < ROWS; r++) {
-    const occupied = rnd() < 0.72;
+    const occupied = rnd() < 0.5;
     const floorBias = occupied ? skin.density * (0.7 + rnd() * 2.6) : skin.density * 0.1;
     const yy = (ROWS - 1 - r) * CELL;   // canvas y is flipped vs uv.v -> floor 0 at the base
     if (occupied && rnd() < 0.55) {      // whole-floor ambient wash (cool or warm), fading in/out along the floor
@@ -138,7 +138,7 @@ export function glowGlassMaterial(tone = 'blue') {
   const key = 'glowglass:' + tone;
   if (cache.glass.has(key)) return cache.glass.get(key);
   const map = glowGlassTexture(tone);
-  const m = new THREE.MeshStandardMaterial({ color: 0x111a33, map, emissive: new THREE.Color(0xffffff), emissiveMap: map, emissiveIntensity: 0.75, metalness: 0.35, roughness: 0.22, envMapIntensity: 1.5 });
+  const m = new THREE.MeshStandardMaterial({ color: 0x111a33, map, emissive: new THREE.Color(0xffffff), emissiveMap: map, emissiveIntensity: 1.15, metalness: 0.35, roughness: 0.22, envMapIntensity: 1.5 });
   cache.glass.set(key, m); return m;
 }
 
@@ -156,7 +156,7 @@ float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(v
       { float hz = vWV.x + vWV.z;
         float zone = vn(vec2(hz*.045, vWV.y*.06)) * .6 + vn(vec2(hz*.17, vWV.y*.21)) * .4;      // patches of floors, tens of metres across
         float flr = vh(vec2(floor(vWV.y/2.7), floor(hz*.02) + 3.)) ;                              // per-floor-run brightness
-        totalEmissiveRadiance *= mix(.45, 1.55, zone) * mix(.6, 1.15, flr)
+        totalEmissiveRadiance *= mix(.12, 1.9, smoothstep(.25, .8, zone)) * mix(.45, 1.2, flr)
           + vec3(.02,.05,.13) * smoothstep(.55,.9,zone) * (.4 + flr);
         // fine near-field detail: each window is split by a thin mullion into two sub-panes with their own brightness,
         // plus faint blind slats; all of it fades to the plain average once a sub-pane is smaller than ~a pixel.
@@ -178,7 +178,7 @@ export function glassMaterial(skinIdx) {
   const m = new THREE.MeshStandardMaterial({
     map, roughnessMap: orm, metalnessMap: orm,
     color: 0xffffff, metalness: 1.0, roughness: 1.0, envMapIntensity: skin.env,
-    emissive: new THREE.Color(0xffffff), emissiveMap: litTexture(skinIdx, 4242 + skinIdx * 77), emissiveIntensity: 1.45,
+    emissive: new THREE.Color(0xffffff), emissiveMap: litTexture(skinIdx, 4242 + skinIdx * 77), emissiveIntensity: 0.9,
   });
   varyLighting(m);
   cache.glass.set(skinIdx, m);
@@ -190,7 +190,7 @@ export function heroGlassMaterial(skinIdx = 0) {
   const key = 'hero' + skinIdx;
   if (cache.glass.has(key)) return cache.glass.get(key);
   const m = glassMaterial(skinIdx).clone();
-  m.envMapIntensity = 3.0; m.emissiveIntensity = 2.1; m.roughness = 0.8;
+  m.envMapIntensity = 3.0; m.emissiveIntensity = 2.9; m.roughness = 0.8;
   m.emissiveMap = litTexture(skinIdx, 9100 + skinIdx * 53); // own lit pattern (denser than ambient towers)
   varyLighting(m);
   cache.glass.set(key, m); return m;

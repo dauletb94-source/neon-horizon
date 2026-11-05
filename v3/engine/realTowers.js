@@ -93,11 +93,11 @@ float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return
   vec3 sheen = vec3(0.10,0.22,0.5) * glassSheen * 2.0;
   // glowing atrium / sky-lobby glass bands (blue-violet or magenta wash with floor lines), walls only
   float bandId = floor(vLocal.y / (uUnit * 7.5));
-  float atr = step(0.84, h21(vec2(bandId, 3.1))) * wall;
+  float atr = step(0.7, h21(vec2(bandId, 3.1))) * wall;
   float flr = smoothstep(0.0, 0.12, abs(fract(vLocal.y / (uUnit * 1.7)) - 0.5) * 2.0 + 0.0);
   vec3 atrC = mix(vec3(0.25,0.45,1.0), vec3(0.85,0.3,1.0), step(0.75, h21(vec2(bandId, 9.9))));
-  sheen += atrC * atr * (0.55 + 0.25 * flr) * (1.0 - smoothstep(0.35, 1.0, px) * 0.5);
-  totalEmissiveRadiance = warm * on * inCell * wall * mix(0.35, 1.0, pane) * bright * vgrad * 1.7 * (1.0 - atr * 0.8) + sheen;
+  sheen += atrC * atr * (0.85 + 0.3 * flr) * (1.0 - smoothstep(0.35, 1.0, px) * 0.5);
+  totalEmissiveRadiance = warm * on * inCell * wall * mix(0.35, 1.0, pane) * bright * vgrad * 1.25 * mix(0.35, 1.0, step(0.45, h21(vec2(floor(vLocal.y / (uUnit * 5.0)), floor(ang / (uUnit * 6.0)) + 2.0)))) * (1.0 - atr * 0.8) + sheen;
 }`);
   };
   nightCache.set(key, m);

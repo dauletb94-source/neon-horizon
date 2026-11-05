@@ -223,7 +223,7 @@
       let html = "";
       for (let i = 1; i <= 6; i++) html += `<div class="faq-item"><b>${esc(t("faq_q" + i))}</b><p class="sheet-text">${esc(t("faq_a" + i))}</p></div>`;
       html += `<div class="faq-credits"><div>${esc(t("faq_credits"))}</div>` + CREDITS.map((c) => `<div>${esc(c[0])} — ${esc(c[1])}, ${c[2]} · <a href="${c[3]}" target="_blank" rel="noopener">sketchfab</a></div>`).join("") +
-        `<div>Poly Haven HDRI (CC0) · three.js (MIT)</div></div>`;
+        `<div>Poly Haven HDRI (CC0) · self-authored tower library & metro (CC0) · three.js (MIT)</div></div>`;
       body.innerHTML = html;
     });
   }

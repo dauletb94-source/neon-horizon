@@ -85,7 +85,7 @@ void main(){
     vec2 cc = floor(cell / vec2(3.0, 2.0));
     float sparkle = step(h2(cc + seed*3.3), dens*0.55) * (0.25 + 0.5*h2(cc*1.9 + seed));
     float lit = mix(on*bright*mullion, sparkle * 0.55 + min(dens,0.8)*0.03, fade);
-    emis = lc * lit * 1.7;
+    emis = lc * lit * 1.2;
     // glowing floor wash + vertical gradient (bright base glow of the street, dimmer higher up)
     float hn = clamp(vW.y / (vSize.y*1.0), 0., 1.);
     emis += vTint * 0.02 * floorLit * (1.-hn*0.6) * (1.-fade);

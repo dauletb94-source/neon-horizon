@@ -50,7 +50,7 @@ export class FillerField {
       const neon = NEON_KEYS[(rnd() * NEON_KEYS.length) | 0], rot = ((rnd() * 4) | 0) * Math.PI / 2;
       const d = dens(p.cx, p.cz), r0 = rnd();
       if (r0 < 0.05 + 0.07 * (1 - d)) { p.taken = 'filler'; continue; }                                  // open dark plaza
-      if (r0 < 0.24 + 0.12 * (1 - d)) { this._podium(p, rnd, neon); continue; }                         // garden podium
+      if (r0 < 0.30 + 0.12 * (1 - d)) { this._podium(p, rnd, neon); continue; }                         // garden podium
       if (realModels.length && rnd() < 0.5) { // downloaded realistic tower on this plot
         const ri = (rnd() * realModels.length) | 0;
         if (realUsed[ri] < (REAL_CAP[ri] ?? 20)) {
